@@ -16,43 +16,32 @@ import java.util.Set;
 import org.objectweb.asm.tree.AbstractInsnNode;
 
 /**
- * Interface used by filters to mark filtered items.
+ * 过滤器用来标记过滤项目的接口
  */
 public interface IFilterOutput {
 
-	/**
-	 * Marks sequence of instructions that should be ignored during computation
-	 * of coverage.
-	 *
-	 * @param fromInclusive
-	 *            first instruction that should be ignored, inclusive
-	 * @param toInclusive
-	 *            last instruction coming after <code>fromInclusive</code> that
-	 *            should be ignored, inclusive
-	 */
-	void ignore(AbstractInsnNode fromInclusive, AbstractInsnNode toInclusive);
+    /**
+     * 标记在计算覆盖率时应该忽略的指令序列
+     *
+     * @param fromInclusive 应忽略的第一条指令，包括
+     * @param toInclusive   应忽略的位于“代码”之后的最后一条指令，包括
+     */
+    void ignore(AbstractInsnNode fromInclusive, AbstractInsnNode toInclusive);
 
-	/**
-	 * Marks two instructions that should be merged during computation of
-	 * coverage.
-	 * 
-	 * @param i1
-	 *            first instruction
-	 * @param i2
-	 *            second instruction
-	 */
-	void merge(AbstractInsnNode i1, AbstractInsnNode i2);
+    /**
+     * 标记在计算覆盖率期间应该合并的两条指令
+     *
+     * @param i1    第一条指令
+     * @param i2    第二条指令
+     */
+    void merge(AbstractInsnNode i1, AbstractInsnNode i2);
 
-	/**
-	 * Marks instruction whose outgoing branches should be replaced during
-	 * computation of coverage.
-	 *
-	 * @param source
-	 *            instruction which branches should be replaced
-	 * @param newTargets
-	 *            new targets of branches
-	 */
-	void replaceBranches(AbstractInsnNode source,
-			Set<AbstractInsnNode> newTargets);
+    /**
+     * 标记在计算覆盖率时应该替换其输出分支的指令
+     *
+     * @param source        指示哪些分支应该被替换
+     * @param newTargets    分行的新目标
+     */
+    void replaceBranches(AbstractInsnNode source, Set<AbstractInsnNode> newTargets);
 
 }

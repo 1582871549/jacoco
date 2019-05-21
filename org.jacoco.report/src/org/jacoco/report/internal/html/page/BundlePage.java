@@ -22,80 +22,71 @@ import org.jacoco.report.internal.html.HTMLElement;
 import org.jacoco.report.internal.html.IHTMLReportContext;
 
 /**
- * Page showing coverage information for a bundle. The page contains a table
- * with all packages of the bundle.
+ * 显示捆绑包覆盖信息的页面。该页面包含一个包含包的所有包的表格。
  */
 public class BundlePage extends TablePage<ICoverageNode> {
 
-	private final ISourceFileLocator locator;
+    private final ISourceFileLocator locator;
 
-	private IBundleCoverage bundle;
+    private IBundleCoverage bundle;
 
-	/**
-	 * Creates a new visitor in the given context.
-	 * 
-	 * @param bundle
-	 *            coverage date for the bundle
-	 * @param parent
-	 *            optional hierarchical parent
-	 * @param locator
-	 *            source locator
-	 * @param folder
-	 *            base folder for this bundle
-	 * @param context
-	 *            settings context
-	 */
-	public BundlePage(final IBundleCoverage bundle, final ReportPage parent,
-			final ISourceFileLocator locator, final ReportOutputFolder folder,
-			final IHTMLReportContext context) {
-		super(bundle.getPlainCopy(), parent, folder, context);
-		this.bundle = bundle;
-		this.locator = locator;
-	}
+    /**
+     * 在给定上下文中创建新访问者
+     *
+     * @param bundle    捆绑包的覆盖日期
+     * @param parent    可选分层父级
+     * @param locator   源定位器
+     * @param folder    此捆绑包的基本文件夹
+     * @param context   设置上下文
+     */
+    public BundlePage(final IBundleCoverage bundle, final ReportPage parent,
+                      final ISourceFileLocator locator, final ReportOutputFolder folder,
+                      final IHTMLReportContext context) {
+        super(bundle.getPlainCopy(), parent, folder, context);
+        this.bundle = bundle;
+        this.locator = locator;
+    }
 
-	@Override
-	public void render() throws IOException {
-		renderPackages();
-		super.render();
-		// Don't keep the bundle structure in memory
-		bundle = null;
-	}
+    @Override
+    public void render() throws IOException {
+        renderPackages();
+        super.render();
+        // 不要将捆绑结构保存在内存中
+        bundle = null;
+    }
 
-	private void renderPackages() throws IOException {
-		for (final IPackageCoverage p : bundle.getPackages()) {
-			if (!p.containsCode()) {
-				continue;
-			}
-			final String packagename = p.getName();
-			final String foldername = packagename.length() == 0 ? "default"
-					: packagename.replace('/', '.');
-			final PackagePage page = new PackagePage(p, this, locator,
-					folder.subFolder(foldername), context);
-			page.render();
-			addItem(page);
-		}
-	}
+    private void renderPackages() throws IOException {
+        for (final IPackageCoverage p : bundle.getPackages()) {
+            if (!p.containsCode()) {
+                continue;
+            }
+            final String packagename = p.getName();
+            final String foldername = packagename.length() == 0 ? "default" : packagename.replace('/', '.');
+            final PackagePage page = new PackagePage(p, this, locator, folder.subFolder(foldername), context);
+            page.render();
+            addItem(page);
+        }
+    }
 
-	@Override
-	protected String getOnload() {
-		return "initialSort(['breadcrumb', 'coveragetable'])";
-	}
+    @Override
+    protected String getOnload() {
+        return "initialSort(['breadcrumb', 'coveragetable'])";
+    }
 
-	@Override
-	protected String getFileName() {
-		return "index.html";
-	}
+    @Override
+    protected String getFileName() {
+        return "index.html";
+    }
 
-	@Override
-	protected void content(HTMLElement body) throws IOException {
-		if (bundle.getPackages().isEmpty()) {
-			body.p().text("No class files specified.");
-		} else if (!bundle.containsCode()) {
-			body.p().text(
-					"None of the analyzed classes contain code relevant for code coverage.");
-		} else {
-			super.content(body);
-		}
-	}
+    @Override
+    protected void content(HTMLElement body) throws IOException {
+        if (bundle.getPackages().isEmpty()) {
+            body.p().text("No class files specified.");
+        } else if (!bundle.containsCode()) {
+            body.p().text("None of the analyzed classes contain code relevant for code coverage.");
+        } else {
+            super.content(body);
+        }
+    }
 
 }

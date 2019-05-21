@@ -7,42 +7,38 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.core.analysis;
 
 /**
- * Interface for coverage nodes that have individual source lines like methods,
- * classes and source files.
+ * 覆盖节点的接口，这些节点具有单独的源代码行，如方法、类和源文件。
  */
 public interface ISourceNode extends ICoverageNode {
 
-	/** Place holder for unknown lines (no debug information) */
-	int UNKNOWN_LINE = -1;
+    /** 放置未知行的支架(无调试信息) */
+    int UNKNOWN_LINE = -1;
 
-	/**
-	 * The number of the first line coverage information is available for. If no
-	 * line is contained, the method returns -1.
-	 * 
-	 * @return number of the first line or {@link #UNKNOWN_LINE}
-	 */
-	int getFirstLine();
+    /**
+     * 第一行覆盖信息的数量。如果不包含任何行，该方法返回-1。
+     *
+     * @return number of the first line or {@link #UNKNOWN_LINE}
+     */
+    int getFirstLine();
 
-	/**
-	 * The number of the last line coverage information is available for. If no
-	 * line is contained, the method returns -1.
-	 * 
-	 * @return number of the last line or {@link #UNKNOWN_LINE}
-	 */
-	int getLastLine();
+    /**
+     * 最后一行覆盖信息的数量。如果不包含任何行，该方法返回-1。
+     *
+     * @return number of the last line or {@link #UNKNOWN_LINE}
+     */
+    int getLastLine();
 
-	/**
-	 * Returns the line information for given line.
-	 * 
-	 * @param nr
-	 *            line number of interest
-	 * @return line information
-	 */
-	ILine getLine(int nr);
+    /**
+     * 返回给定行的行信息。
+     *
+     * @param nr    感兴趣的行号
+     * @return line information
+     */
+    ILine getLine(int nr);
 
 }

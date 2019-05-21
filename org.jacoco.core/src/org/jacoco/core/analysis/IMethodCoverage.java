@@ -7,28 +7,27 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.core.analysis;
 
 /**
- * Coverage data of a single method. The name of this node is the local method
- * name.
+ * 单一方法的覆盖数据。此节点的名称是本地方法名称。
  */
 public interface IMethodCoverage extends ISourceNode {
 
-	/**
-	 * Returns the descriptor of the method.
-	 * 
-	 * @return descriptor
-	 */
-	String getDesc();
+    /**
+     * 返回方法的描述符。
+     *
+     * @return descriptor
+     */
+    String getDesc();
 
-	/**
-	 * Returns the generic signature of the method if defined.
-	 * 
-	 * @return generic signature or <code>null</code>
-	 */
-	String getSignature();
+    /**
+     * 如果已定义，则返回方法的通用签名。
+     *
+     * @return generic signature or <code>null</code>
+     */
+    String getSignature();
 
 }

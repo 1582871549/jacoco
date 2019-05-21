@@ -14,72 +14,70 @@ package org.jacoco.core.analysis;
 import java.util.Collection;
 
 /**
- * Coverage data of a single class containing methods. The name of this node is
- * the fully qualified class name in VM notation (slash separated).
+ * 包含方法的单个类的覆盖数据。
+ * 此节点的名称是虚拟机符号中的完全限定类名(斜线分隔)。
  * 
  * @see IMethodCoverage
  */
 public interface IClassCoverage extends ISourceNode {
 
-	/**
-	 * Returns the identifier for this class which is the CRC64 signature of the
-	 * class definition.
-	 * 
-	 * @return class identifier
-	 */
-	long getId();
+    /**
+     * 返回该类的标识符，即类定义的CRC64签名。
+     *
+     * @return class identifier
+     */
+    long getId();
 
-	/**
-	 * Returns if the the analyzed class does match the execution data provided.
-	 * More precisely if execution data is available for a class with the same
-	 * qualified name but with a different class id.
-	 * 
-	 * @return <code>true</code> if this class does not match to the provided
-	 *         execution data.
-	 */
-	boolean isNoMatch();
+    /**
+     * 如果分析的类与提供的执行数据匹配，则返回。
+     * 更确切地说，如果执行数据可用于具有相同限定名但具有不同类id的类。
+     *
+     * @return <code>true</code> if this class does not match to the provided
+     *         execution data.
+     */
+    boolean isNoMatch();
 
-	/**
-	 * Returns the VM signature of the class.
-	 * 
-	 * @return VM signature of the class (may be <code>null</code>)
-	 */
-	String getSignature();
+    /**
+     * 返回类的虚拟机签名。
+     *
+     * @return VM signature of the class (may be <code>null</code>)
+     */
+    String getSignature();
 
-	/**
-	 * Returns the VM name of the superclass.
-	 * 
-	 * @return VM name of the super class (may be <code>null</code>, i.e.
-	 *         <code>java/lang/Object</code>)
-	 */
-	String getSuperName();
+    /**
+     * 返回超类的虚拟机名称。
+     *
+     * @return VM name of the super class (may be <code>null</code>, i.e.
+     *         <code>java/lang/Object</code>)
+     */
+    String getSuperName();
 
-	/**
-	 * Returns the VM names of implemented/extended interfaces.
-	 * 
-	 * @return VM names of implemented/extended interfaces
-	 */
-	String[] getInterfaceNames();
+    /**
+     * 返回已实现/扩展接口的虚拟机名称。
+     *
+     * @return VM names of implemented/extended interfaces
+     */
+    String[] getInterfaceNames();
 
-	/**
-	 * Returns the VM name of the package this class belongs to.
-	 * 
-	 * @return VM name of the package
-	 */
-	String getPackageName();
+    /**
+     * 返回此类所属包的虚拟机名称。
+     *
+     * @return VM name of the package
+     */
+    String getPackageName();
 
-	/**
-	 * Returns the optional name of the corresponding source file.
-	 * 
-	 * @return name of the corresponding source file
-	 */
-	String getSourceFileName();
+    /**
+     * 返回相应源文件的可选名称。
+     *
+     * @return name of the corresponding source file
+     */
+    String getSourceFileName();
 
-	/**
-	 * Returns the methods included in this class.
-	 * 
-	 * @return methods of this class
-	 */
-	Collection<IMethodCoverage> getMethods();
+    /**
+     * 返回此类中包含的方法。
+     *
+     * @return methods of this class
+     */
+    Collection<IMethodCoverage> getMethods();
 
 }

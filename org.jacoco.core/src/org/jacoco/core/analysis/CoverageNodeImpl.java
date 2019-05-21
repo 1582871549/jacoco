@@ -7,7 +7,7 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.core.analysis;
 
@@ -16,153 +16,150 @@ import java.util.Collection;
 import org.jacoco.core.internal.analysis.CounterImpl;
 
 /**
- * Base implementation for coverage data nodes.
+ * 覆盖数据节点的基本实现。
  */
 public class CoverageNodeImpl implements ICoverageNode {
 
-	private final ElementType elementType;
+    private final ElementType elementType;
 
-	private final String name;
+    private final String name;
 
-	/** Counter for branches. */
-	protected CounterImpl branchCounter;
+    /** 分支计数器. */
+    protected CounterImpl branchCounter;
 
-	/** Counter for instructions. */
-	protected CounterImpl instructionCounter;
+    /** 指令计数器. */
+    protected CounterImpl instructionCounter;
 
-	/** Counter for lines */
-	protected CounterImpl lineCounter;
+    /** 行计数器 */
+    protected CounterImpl lineCounter;
 
-	/** Counter for complexity. */
-	protected CounterImpl complexityCounter;
+    /** 圈计数器. */
+    protected CounterImpl complexityCounter;
 
-	/** Counter for methods. */
-	protected CounterImpl methodCounter;
+    /** 方法计数器 */
+    protected CounterImpl methodCounter;
 
-	/** Counter for classes. */
-	protected CounterImpl classCounter;
+    /** 类计数器. */
+    protected CounterImpl classCounter;
 
-	/**
-	 * Creates a new coverage data node.
-	 * 
-	 * @param elementType
-	 *            type of the element represented by this instance
-	 * @param name
-	 *            name of this node
-	 */
-	public CoverageNodeImpl(final ElementType elementType, final String name) {
-		this.elementType = elementType;
-		this.name = name;
-		this.branchCounter = CounterImpl.COUNTER_0_0;
-		this.instructionCounter = CounterImpl.COUNTER_0_0;
-		this.complexityCounter = CounterImpl.COUNTER_0_0;
-		this.methodCounter = CounterImpl.COUNTER_0_0;
-		this.classCounter = CounterImpl.COUNTER_0_0;
-		this.lineCounter = CounterImpl.COUNTER_0_0;
-	}
+    /**
+     * 创建新的覆盖数据节点, 初始化各项覆盖率指标
+     *
+     * @param elementType   此实例表示的元素的类型
+     * @param name          此节点的名称
+     */
+    public CoverageNodeImpl(final ElementType elementType, final String name) {
+        this.elementType = elementType;
+        this.name = name;
+        this.branchCounter = CounterImpl.COUNTER_0_0;
+        this.instructionCounter = CounterImpl.COUNTER_0_0;
+        this.complexityCounter = CounterImpl.COUNTER_0_0;
+        this.methodCounter = CounterImpl.COUNTER_0_0;
+        this.classCounter = CounterImpl.COUNTER_0_0;
+        this.lineCounter = CounterImpl.COUNTER_0_0;
+    }
 
-	/**
-	 * Increments the counters by the values given by another element.
-	 * 
-	 * @param child
-	 *            counters to add
-	 */
-	public void increment(final ICoverageNode child) {
-		instructionCounter = instructionCounter.increment(child
-				.getInstructionCounter());
-		branchCounter = branchCounter.increment(child.getBranchCounter());
-		lineCounter = lineCounter.increment(child.getLineCounter());
-		complexityCounter = complexityCounter.increment(child
-				.getComplexityCounter());
-		methodCounter = methodCounter.increment(child.getMethodCounter());
-		classCounter = classCounter.increment(child.getClassCounter());
-	}
+    /**
+     * 用另一个元素给定的值递增计数器
+     *
+     * @param child     要添加的计数器
+     */
+    public void increment(final ICoverageNode child) {
+        instructionCounter = instructionCounter.increment(child.getInstructionCounter());
+        branchCounter = branchCounter.increment(child.getBranchCounter());
+        lineCounter = lineCounter.increment(child.getLineCounter());
+        complexityCounter = complexityCounter.increment(child.getComplexityCounter());
+        methodCounter = methodCounter.increment(child.getMethodCounter());
+        classCounter = classCounter.increment(child.getClassCounter());
+    }
 
-	/**
-	 * Increments the counters by the values given by the collection of
-	 * elements.
-	 * 
-	 * @param children
-	 *            list of nodes, which counters will be added to this node
-	 */
-	public void increment(final Collection<? extends ICoverageNode> children) {
-		for (final ICoverageNode child : children) {
-			increment(child);
-		}
-	}
+    /**
+     * 用元素集合给定的值递增计数器
+     *
+     * @param children  节点列表，哪些计数器将被添加到该节点
+     */
+    public void increment(final Collection<? extends ICoverageNode> children) {
+        for (final ICoverageNode child : children) {
+            increment(child);
+        }
+    }
 
-	// === ICoverageDataNode ===
+    // === ICoverageDataNode ===
 
-	public ElementType getElementType() {
-		return elementType;
-	}
+    public ElementType getElementType() {
+        return elementType;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public ICounter getInstructionCounter() {
-		return instructionCounter;
-	}
+    public ICounter getInstructionCounter() {
+        return instructionCounter;
+    }
 
-	public ICounter getBranchCounter() {
-		return branchCounter;
-	}
+    public ICounter getBranchCounter() {
+        return branchCounter;
+    }
 
-	public ICounter getLineCounter() {
-		return lineCounter;
-	}
+    public ICounter getLineCounter() {
+        return lineCounter;
+    }
 
-	public ICounter getComplexityCounter() {
-		return complexityCounter;
-	}
+    public ICounter getComplexityCounter() {
+        return complexityCounter;
+    }
 
-	public ICounter getMethodCounter() {
-		return methodCounter;
-	}
+    public ICounter getMethodCounter() {
+        return methodCounter;
+    }
 
-	public ICounter getClassCounter() {
-		return classCounter;
-	}
+    public ICounter getClassCounter() {
+        return classCounter;
+    }
 
-	public ICounter getCounter(final CounterEntity entity) {
-		switch (entity) {
-		case INSTRUCTION:
-			return getInstructionCounter();
-		case BRANCH:
-			return getBranchCounter();
-		case LINE:
-			return getLineCounter();
-		case COMPLEXITY:
-			return getComplexityCounter();
-		case METHOD:
-			return getMethodCounter();
-		case CLASS:
-			return getClassCounter();
-		}
-		throw new AssertionError(entity);
-	}
+    public ICounter getCounter(final CounterEntity entity) {
+        switch (entity) {
+            case INSTRUCTION:
+                return getInstructionCounter();
+            case BRANCH:
+                return getBranchCounter();
+            case LINE:
+                return getLineCounter();
+            case COMPLEXITY:
+                return getComplexityCounter();
+            case METHOD:
+                return getMethodCounter();
+            case CLASS:
+                return getClassCounter();
+        }
+        throw new AssertionError(entity);
+    }
 
-	public boolean containsCode() {
-		return getInstructionCounter().getTotalCount() != 0;
-	}
+    public boolean containsCode() {
+        return getInstructionCounter().getTotalCount() != 0;
+    }
 
-	public ICoverageNode getPlainCopy() {
-		final CoverageNodeImpl copy = new CoverageNodeImpl(elementType, name);
-		copy.instructionCounter = CounterImpl.getInstance(instructionCounter);
-		copy.branchCounter = CounterImpl.getInstance(branchCounter);
-		copy.lineCounter = CounterImpl.getInstance(lineCounter);
-		copy.complexityCounter = CounterImpl.getInstance(complexityCounter);
-		copy.methodCounter = CounterImpl.getInstance(methodCounter);
-		copy.classCounter = CounterImpl.getInstance(classCounter);
-		return copy;
-	}
+    /**
+     * 只调用一次, 在最后一个类解析完之后
+     * @return
+     */
+    public ICoverageNode getPlainCopy() {
+        final CoverageNodeImpl copy = new CoverageNodeImpl(elementType, name);
+        copy.instructionCounter = CounterImpl.getInstance(instructionCounter);
+        copy.branchCounter = CounterImpl.getInstance(branchCounter);
+        copy.lineCounter = CounterImpl.getInstance(lineCounter);
+        copy.complexityCounter = CounterImpl.getInstance(complexityCounter);
+        copy.methodCounter = CounterImpl.getInstance(methodCounter);
+        copy.classCounter = CounterImpl.getInstance(classCounter);
+        return copy;
+    }
 
-	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append(name).append(" [").append(elementType).append("]");
-		return sb.toString();
-	}
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(name).append(" [").append(elementType).append("]");
+        return sb.toString();
+    }
 
 }

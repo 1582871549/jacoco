@@ -15,11 +15,14 @@ package org.jacoco.core.data;
  * Interface for data output of collected execution data. This interface is
  * meant to be implemented by parties that want to retrieve data from the
  * coverage runtime.
+ *
+ * 收集的执行数据的数据输出接口。该接口旨在由希望从覆盖运行时检索数据的各方实现。
  */
 public interface IExecutionDataVisitor {
 
 	/**
 	 * Provides execution data for a class.
+     * 提供类的执行数据。
 	 * 
 	 * @param data
 	 *            execution data for a class

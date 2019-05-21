@@ -7,41 +7,39 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.core.analysis;
 
 /**
- * The instruction and branch coverage of a single source line is described by
- * this interface.
+ * 单个源行的指令和分支覆盖由该接口描述。
  */
 public interface ILine {
 
-	/**
-	 * Returns the instruction counter for this line.
-	 * 
-	 * @return instruction counter
-	 */
-	ICounter getInstructionCounter();
+    /**
+     * 返回该行的指令计数器
+     *
+     * @return instruction counter
+     */
+    ICounter getInstructionCounter();
 
-	/**
-	 * Returns the branches counter for this line.
-	 * 
-	 * @return branches counter
-	 */
-	ICounter getBranchCounter();
+    /**
+     * 返回该行的分支计数器
+     *
+     * @return branches counter
+     */
+    ICounter getBranchCounter();
 
-	/**
-	 * Returns the coverage status of this line, calculated from the
-	 * instructions counter and branch counter.
-	 * 
-	 * @see ICounter#EMPTY
-	 * @see ICounter#NOT_COVERED
-	 * @see ICounter#PARTLY_COVERED
-	 * @see ICounter#FULLY_COVERED
-	 * 
-	 * @return status of this line
-	 */
-	int getStatus();
+    /**
+     * 返回从构造计数器和分支计数器计算的该行的覆盖状态
+     *
+     * @see ICounter#EMPTY              空的
+     * @see ICounter#NOT_COVERED        未覆盖
+     * @see ICounter#PARTLY_COVERED     部分覆盖
+     * @see ICounter#FULLY_COVERED      完全覆盖
+     *
+     * @return status of this line
+     */
+    int getStatus();
 
 }

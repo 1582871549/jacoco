@@ -12,15 +12,15 @@
 package org.jacoco.core.internal.flow;
 
 /**
- * Internal interface to create probe ids unique within a class.
+ * 内部接口，用于创建类中唯一的探针id。
  */
 public interface IProbeIdGenerator {
 
-	/**
-	 * Returns the next unique probe id.
-	 * 
-	 * @return unique probe id
-	 */
-	int nextId();
+    /**
+     * 返回下一个探针id。(是唯一的)
+     *
+     * @return unique probe id
+     */
+    int nextId();
 
 }

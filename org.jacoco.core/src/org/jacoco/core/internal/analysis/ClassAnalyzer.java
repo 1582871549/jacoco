@@ -7,12 +7,9 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.core.internal.analysis;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import org.jacoco.core.internal.analysis.filter.Filters;
 import org.jacoco.core.internal.analysis.filter.IFilter;
@@ -25,133 +22,262 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
- * Analyzes the structure of a class.
+ * 分析一个类的结构。
  */
-public class ClassAnalyzer extends ClassProbesVisitor
-		implements IFilterContext {
+public class ClassAnalyzer extends ClassProbesVisitor implements IFilterContext {
 
-	private final ClassCoverageImpl coverage;
-	private final boolean[] probes;
-	private final StringPool stringPool;
+    private final ClassCoverageImpl coverage;
+    private final boolean[] probes;
+    private final StringPool stringPool;
 
-	private final Set<String> classAnnotations = new HashSet<String>();
+    private final Set<String> classAnnotations = new HashSet<String>();
 
-	private String sourceDebugExtension;
+    private String sourceDebugExtension;
 
-	private final IFilter filter;
+    private final IFilter filter;
 
-	/**
-	 * Creates a new analyzer that builds coverage data for a class.
-	 * 
-	 * @param coverage
-	 *            coverage node for the analyzed class data
-	 * @param probes
-	 *            execution data for this class or <code>null</code>
-	 * @param stringPool
-	 *            shared pool to minimize the number of {@link String} instances
-	 */
-	public ClassAnalyzer(final ClassCoverageImpl coverage,
-			final boolean[] probes, final StringPool stringPool) {
-		this.coverage = coverage;
-		this.probes = probes;
-		this.stringPool = stringPool;
-		this.filter = Filters.all();
-	}
+    /**
+     * Creates a new analyzer that builds coverage data for a class.
+     *
+     * @param coverage          类数据
+     * @param probes            探针
+     * @param stringPool    共享池最大限度地减少{字符串}实例的数量
+     */
+    public ClassAnalyzer(final ClassCoverageImpl coverage, final boolean[] probes, final StringPool stringPool) {
+        super();
+        this.coverage = coverage;
+        this.probes = probes;
+        this.stringPool = stringPool;
+        this.filter = Filters.all();
+    }
 
-	@Override
-	public void visit(final int version, final int access, final String name,
-			final String signature, final String superName,
-			final String[] interfaces) {
-		coverage.setSignature(stringPool.get(signature));
-		coverage.setSuperName(stringPool.get(superName));
-		coverage.setInterfaces(stringPool.get(interfaces));
-	}
+    @Override
+    public void visit(final int version, final int access, final String name,
+                      final String signature, final String superName,
+                      final String[] interfaces) {
 
-	@Override
-	public AnnotationVisitor visitAnnotation(final String desc,
-			final boolean visible) {
-		classAnnotations.add(desc);
-		return super.visitAnnotation(desc, visible);
-	}
+        // System.out.println("----------2----------" + "ClassAnalyzer # visit");
+        // version      52
+        // access       33
+        // name         com/dudu/common/configuration/bean/MyProperties
+        // signature    null
+        // superName    java/lang/Object
+        // interfaces   []
+        // -------------------------------------------------------------------------
+        // version      52
+        // access       33
+        // name         com/dudu/common/configuration/example/impl/SecondarySchoolServiceImpl
+        // signature    null
+        // superName    java/lang/Object
+        // interfaces   [com/dudu/common/configuration/example/SchoolService]
 
-	@Override
-	public void visitSource(final String source, final String debug) {
-		coverage.setSourceFileName(stringPool.get(source));
-		sourceDebugExtension = debug;
-	}
+        // 向ClassCoverageImpl对象赋值, 填充stringPool.pool
+        coverage.setSignature(stringPool.get(signature));
+        coverage.setSuperName(stringPool.get(superName));
+        coverage.setInterfaces(stringPool.get(interfaces));
+    }
 
-	@Override
-	public MethodProbesVisitor visitMethod(final int access, final String name,
-			final String desc, final String signature,
-			final String[] exceptions) {
+    @Override
+    public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
 
-		InstrSupport.assertNotInstrumented(name, coverage.getName());
+        // System.out.println("----------4----------" + "ClassAnalyzer # visitAnnotation");
+        // desc         Lorg/springframework/context/annotation/Configuration;
+        // visible      true
+        // -------------------------------------------------------------------------
+        // desc         Lorg/springframework/web/bind/annotation/RequestMapping;
+        // visible      true
 
-		final InstructionsBuilder builder = new InstructionsBuilder(probes);
+        classAnnotations.add(desc);
+        return super.visitAnnotation(desc, visible);
+    }
 
-		return new MethodAnalyzer(builder) {
+    @Override
+    public void visitSource(final String source, final String debug) {
 
-			@Override
-			public void accept(final MethodNode methodNode,
-					final MethodVisitor methodVisitor) {
-				super.accept(methodNode, methodVisitor);
-				addMethodCoverage(stringPool.get(name), stringPool.get(desc),
-						stringPool.get(signature), builder, methodNode);
-			}
-		};
-	}
+        // System.out.println("----------3----------" + "ClassAnalyzer # visitSource");
+        // source       MyProperties.java
+        // debug        null
+        // -------------------------------------------------------------------------
+        // source       SecondarySchoolServiceImpl.java
+        // debug        null
 
-	private void addMethodCoverage(final String name, final String desc,
-			final String signature, final InstructionsBuilder icc,
-			final MethodNode methodNode) {
-		final MethodCoverageCalculator mcc = new MethodCoverageCalculator(
-				icc.getInstructions());
-		filter.filter(methodNode, this, mcc);
+        // 向ClassCoverageImpl对象赋值, 填充stringPool.pool
+        coverage.setSourceFileName(stringPool.get(source));
+        sourceDebugExtension = debug;
+    }
 
-		final MethodCoverageImpl mc = new MethodCoverageImpl(name, desc,
-				signature);
-		mcc.calculate(mc);
+    /**
+     *
+     * @param access        方法的访问标志， 此参数指示该方法是合成的和 / 或是不推荐使用的
+     * @param name          方法的名称
+     * @param desc          方法的描述符
+     * @param signature     方法的签名。如果方法参数、返回类型和异常不使用泛型类型，则可能为null。
+     * @param exceptions    法异常类的内部名称 。可能为空
+     * @return
+     */
+    @Override
+    public MethodProbesVisitor visitMethod(final int access, final String name,
+                                           final String desc, final String signature,
+                                           final String[] exceptions) {
 
-		if (mc.containsCode()) {
-			// Only consider methods that actually contain code
-			coverage.addMethod(mc);
-		}
+        // System.out.println("----------6----------" + "ClassAnalyzer # visitMethod");
+        // coverage.getName() = com/dudu/common/configuration/bean/MyProperties
+        // access       2
+        // name         name
+        // desc         Ljava/lang/String;
+        // signature    null
+        // value        null
+        // -------------------------------------------------------------------------
 
-	}
+        // System.out.println(access);
+        // System.out.println(name);
+        // System.out.println(desc);
+        // System.out.println(signature);
+        // System.out.println(Arrays.toString(exceptions));
+        // System.out.println(coverage.getName());
+        // System.out.println(Arrays.toString(probes));
 
-	@Override
-	public FieldVisitor visitField(final int access, final String name,
-			final String desc, final String signature, final Object value) {
-		InstrSupport.assertNotInstrumented(name, coverage.getName());
-		return super.visitField(access, name, desc, signature, value);
-	}
+        // 检测判断 方法名, 类名
+        InstrSupport.assertNotInstrumented(name, coverage.getName());
+        // 指令工具 probes 探针数组
+        final InstructionsBuilder builder = new InstructionsBuilder(probes);
 
-	@Override
-	public void visitTotalProbeCount(final int count) {
-		// nothing to do
-	}
+        // 匿名内部类 创建MethodAnalyzer的子类, 并重写其方法
+        return new MethodAnalyzer(builder) {
 
-	// IFilterContext implementation
+            // public void accept(final MethodNode methodNode, final MethodVisitor methodVisitor) {
+            //     methodNode.accept(methodVisitor);
+            // }
 
-	public String getClassName() {
-		return coverage.getName();
-	}
+            /**
+             * @param methodNode        MethodSanitizer 的匿名内部类
+             * @param methodVisitor     MethodProbesAdapter
+             */
+            @Override
+            public void accept(final MethodNode methodNode, final MethodVisitor methodVisitor) {
 
-	public String getSuperClassName() {
-		return coverage.getSuperName();
-	}
+                // System.out.println("----------10---------" + "ClassAnalyzer $ MethodAnalyzer # accept");
 
-	public Set<String> getClassAnnotations() {
-		return classAnnotations;
-	}
+                super.accept(methodNode, methodVisitor);
 
-	public String getSourceFileName() {
-		return coverage.getSourceFileName();
-	}
+                addMethodCoverage(stringPool.get(name), stringPool.get(desc), stringPool.get(signature), builder, methodNode);
+            }
+        };
+    }
 
-	public String getSourceDebugExtension() {
-		return sourceDebugExtension;
-	}
+    private void addMethodCoverage(final String name, final String desc,
+                                   final String signature, final InstructionsBuilder builder,
+                                   final MethodNode methodNode) {
 
+        // 计算单个方法的过滤覆盖率。
+        final MethodCoverageCalculator mcc = new MethodCoverageCalculator(builder.getInstructions());
+
+        filter.filter(methodNode, this, mcc);
+
+        /**
+         * 使用给定参数创建方法覆盖数据对象。
+         * @param name          方法的名称
+         * @param desc          方法的描述符
+         * @param signature     方法的签名。如果方法参数、返回类型和异常不使用泛型类型，则可能为null。
+         */
+        // final MethodCoverageImpl mc = new MethodCoverageImpl(name, desc, signature);
+
+        final MethodCoverageImpl mc = new MethodCoverageImpl(name, desc, signature, coverage);
+
+        // 记录方法是否被覆盖
+        mcc.calculate(mc);
+
+        if (mc.containsCode()) {
+            // 记录类是否被覆盖 只考虑实际包含代码的方法
+            coverage.addMethod(mc);
+        }
+
+    }
+
+    @Override
+    public FieldVisitor visitField(final int access, final String name,
+                                   final String desc, final String signature, final Object value) {
+
+        // System.out.println("----------5----------" + "ClassAnalyzer # visitField");
+        // coverage.getName() = com/dudu/common/configuration/bean/MyProperties
+        // access       2
+        // name         name
+        // desc         Ljava/lang/String;
+        // signature    null
+        // value        null
+        // -------------------------------------------------------------------------
+        // coverage.getName() = com/dudu/common/configuration/bean/MyProperties
+        // access       2
+        // name         sex
+        // desc         Ljava/lang/String;
+        // signature    null
+        // value        null
+        // -------------------------------------------------------------------------
+        // coverage.getName() = com/dudu/service/impl/UserServiceImpl
+        // access       10
+        // name         list
+        // desc         Ljava/util/List;
+        // signature    Ljava/util/List<Ljava/lang/String;>;
+        // value        null
+        // -------------------------------------------------------------------------
+        // coverage.getName() = com/dudu/service/impl/UserServiceImpl
+        // access       10
+        // name         listError
+        // desc         Ljava/util/List;
+        // signature    Ljava/util/List<Ljava/lang/String;>;
+        // value        null
+        // -------------------------------------------------------------------------
+        // coverage.getName() = com/dudu/service/impl/UserServiceImpl
+        // access       10
+        // name         nameError
+        // desc         Ljava/util/List;
+        // signature    Ljava/util/List<Ljava/lang/String;>;
+        // value        null
+        InstrSupport.assertNotInstrumented(name, coverage.getName());
+        return super.visitField(access, name, desc, signature, value);
+    }
+
+    @Override
+    public void visitTotalProbeCount(final int count) {
+        // nothing to do
+    }
+
+    // IFilterContext implementation
+
+    public String getClassName() {
+        return coverage.getName();
+    }
+
+    public String getSuperClassName() {
+        return coverage.getSuperName();
+    }
+
+    public Set<String> getClassAnnotations() {
+        return classAnnotations;
+    }
+
+    public String getSourceFileName() {
+        return coverage.getSourceFileName();
+    }
+
+    public String getSourceDebugExtension() {
+        return sourceDebugExtension;
+    }
+
+    // ====================================
+
+    public ClassCoverageImpl getCoverage() {
+        return coverage;
+    }
+
+    @Override
+    public String toString() {
+        return "ClassAnalyzer{" +
+                "coverage=" + coverage +
+                "} ";
+    }
 }

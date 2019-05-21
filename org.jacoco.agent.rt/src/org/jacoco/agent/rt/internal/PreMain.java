@@ -27,42 +27,50 @@ import org.jacoco.core.runtime.ModifiedSystemClassRuntime;
  */
 public final class PreMain {
 
-	private PreMain() {
-		// no instances
-	}
+    private PreMain() {
+        // no instances
+    }
 
-	/**
-	 * This method is called by the JVM to initialize Java agents.
-	 * 
-	 * @param options
-	 *            agent options
-	 * @param inst
-	 *            instrumentation callback provided by the JVM
-	 * @throws Exception
-	 *             in case initialization fails
-	 */
-	public static void premain(final String options, final Instrumentation inst)
-			throws Exception {
+    /**
+     * This method is called by the JVM to initialize Java agents.
+     *
+     * JVM中通过-javaagent参数指定特定的jar文件启动Instrumentation的代理程序，
+     * 代理程序在通过Class Loader装载一个class前判断是否转换修改class文件，
+     * 将统计代码插入class，测试覆盖率分析可以在JVM执行测试代码的过程中完成。
+     *
+     * 开始 找入口，找入口
+     *
+     * 在jvm 启动参数指定javaagent后，指定了jacoco的jar，启动jvm实例会调用程序里面的permain方法
+     *
+     * @param options
+     *            agent options
+     * @param inst
+     *            instrumentation callback provided by the JVM
+     * @throws Exception
+     *             in case initialization fails
+     */
+    public static void premain(final String options, final Instrumentation inst) throws Exception {
 
-		final AgentOptions agentOptions = new AgentOptions(options);
+        final AgentOptions agentOptions = new AgentOptions(options);
 
-		final Agent agent = Agent.getInstance(agentOptions);
+        final Agent agent = Agent.getInstance(agentOptions);
 
-		final IRuntime runtime = createRuntime(inst);
-		runtime.startup(agent.getData());
-		inst.addTransformer(new CoverageTransformer(runtime, agentOptions,
-				IExceptionLogger.SYSTEM_ERR));
-	}
+        final IRuntime runtime = createRuntime(inst);
 
-	private static IRuntime createRuntime(final Instrumentation inst)
-			throws Exception {
+        runtime.startup(agent.getData());
 
-		if (redefineJavaBaseModule(inst)) {
-			return new InjectedClassRuntime(Object.class, "$JaCoCo");
-		}
+        inst.addTransformer(new CoverageTransformer(runtime, agentOptions, IExceptionLogger.SYSTEM_ERR));
+    }
 
-		return ModifiedSystemClassRuntime.createFor(inst, "java/lang/UnknownError");
-	}
+    private static IRuntime createRuntime(final Instrumentation inst)
+            throws Exception {
+
+        if (redefineJavaBaseModule(inst)) {
+            return new InjectedClassRuntime(Object.class, "$JaCoCo");
+        }
+
+        return ModifiedSystemClassRuntime.createFor(inst, "java/lang/UnknownError");
+    }
 
 	/**
 	 * Opens {@code java.base} module for {@link InjectedClassRuntime} when

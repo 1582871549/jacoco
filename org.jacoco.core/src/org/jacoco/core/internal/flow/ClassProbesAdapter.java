@@ -11,97 +11,184 @@
  *******************************************************************************/
 package org.jacoco.core.internal.flow;
 
+import org.jacoco.core.internal.analysis.ClassAnalyzer;
 import org.jacoco.core.internal.instr.InstrSupport;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.AnalyzerAdapter;
 
+import java.util.Arrays;
+import java.util.Map;
+
 /**
- * A {@link org.objectweb.asm.ClassVisitor} that calculates probes for every
- * method.
+ * 一个为每种方法计算探针的类访问者。
  */
-public class ClassProbesAdapter extends ClassVisitor implements
-		IProbeIdGenerator {
+public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerator {
 
-	private static final MethodProbesVisitor EMPTY_METHOD_PROBES_VISITOR = new MethodProbesVisitor() {
-	};
+    private static final MethodProbesVisitor EMPTY_METHOD_PROBES_VISITOR = new MethodProbesVisitor() {};
 
-	private final ClassProbesVisitor cv;
+    private final ClassProbesVisitor cv;
 
-	private final boolean trackFrames;
+    // 跟踪框架
+    private final boolean trackFrames;
 
-	private int counter = 0;
+    private int counter = 0;
 
-	private String name;
+    private String name;
 
-	/**
-	 * Creates a new adapter that delegates to the given visitor.
-	 * 
-	 * @param cv
-	 *            instance to delegate to
-	 * @param trackFrames
-	 *            if <code>true</code> stackmap frames are tracked and provided
-	 */
-	public ClassProbesAdapter(final ClassProbesVisitor cv,
-			final boolean trackFrames) {
-		super(InstrSupport.ASM_API_VERSION, cv);
-		this.cv = cv;
-		this.trackFrames = trackFrames;
-	}
+    private final Map<String, String> diffMethod;
 
-	@Override
-	public void visit(final int version, final int access, final String name,
-			final String signature, final String superName,
-			final String[] interfaces) {
-		this.name = name;
-		super.visit(version, access, name, signature, superName, interfaces);
-	}
+    /**
+     * 创建委托给给定访问者的新适配器。
+     *
+     * @param cv            要委托给的实例
+     * @param trackFrames   如果为真则，跟踪并提供stackmap帧
+     */
+    public ClassProbesAdapter(final ClassProbesVisitor cv, final boolean trackFrames) {
+        super(InstrSupport.ASM_API_VERSION, cv);
+        this.cv = cv;
+        this.trackFrames = trackFrames;
+        this.diffMethod = null;
+    }
 
-	@Override
-	public final MethodVisitor visitMethod(final int access, final String name,
-			final String desc, final String signature, final String[] exceptions) {
-		final MethodProbesVisitor methodProbes;
-		final MethodProbesVisitor mv = cv.visitMethod(access, name, desc,
-				signature, exceptions);
-		if (mv == null) {
-			// We need to visit the method in any case, otherwise probe ids
-			// are not reproducible
-			methodProbes = EMPTY_METHOD_PROBES_VISITOR;
-		} else {
-			methodProbes = mv;
-		}
-		return new MethodSanitizer(null, access, name, desc, signature,
-				exceptions) {
+    /**
+     * 创建委托给给定访问者的新适配器。
+     *
+     * @param cv            要委托给的实例
+     * @param trackFrames   如果为真则，跟踪并提供stackmap帧
+     */
+    public ClassProbesAdapter(final ClassProbesVisitor cv,
+                              final boolean trackFrames,
+                              final Map<String, String> diffMethod) {
+        super(InstrSupport.ASM_API_VERSION, cv);
+        this.cv = cv;
+        this.trackFrames = trackFrames;
+        this.diffMethod = diffMethod;
+    }
 
-			@Override
-			public void visitEnd() {
-				super.visitEnd();
-				LabelFlowAnalyzer.markLabels(this);
-				final MethodProbesAdapter probesAdapter = new MethodProbesAdapter(
-						methodProbes, ClassProbesAdapter.this);
-				if (trackFrames) {
-					final AnalyzerAdapter analyzer = new AnalyzerAdapter(
-							ClassProbesAdapter.this.name, access, name, desc,
-							probesAdapter);
-					probesAdapter.setAnalyzer(analyzer);
-					methodProbes.accept(this, analyzer);
-				} else {
-					methodProbes.accept(this, probesAdapter);
-				}
-			}
-		};
-	}
+    /**
+     * @param version       版本
+     * @param access        访问
+     * @param name          名字
+     * @param signature     签名
+     * @param superName     超级名
+     * @param interfaces    接口
+     */
+    @Override
+    public void visit(final int version, final int access, final String name,
+                      final String signature, final String superName,
+                      final String[] interfaces) {
 
-	@Override
-	public void visitEnd() {
-		cv.visitTotalProbeCount(counter);
-		super.visitEnd();
-	}
+        // System.out.println();
+        // System.out.println("----------1----------" + "ClassProbesAdapter # visit");
+        // version      52
+        // access       33
+        // name         com/dudu/common/configuration/bean/MyProperties
+        // signature    null
+        // superName    java/lang/Object
+        // interfaces   []
+        // -------------------------------------------------------------------------
+        // version      52
+        // access       33
+        // name         com/dudu/common/configuration/example/impl/SecondarySchoolServiceImpl
+        // signature    null
+        // superName    java/lang/Object
+        // interfaces   [com/dudu/common/configuration/example/SchoolService]
 
-	// === IProbeIdGenerator ===
+        this.name = name;
+        super.visit(version, access, name, signature, superName, interfaces);
+    }
 
-	public int nextId() {
-		return counter++;
-	}
+    /**
+     * 此方法每次调用时都必须返回一个新的{@link MethodVisitor}实例(或{null})，即不应该返回以前返回的实例
+     *
+     * @param access 方法的访问标志， 此参数指示该方法是合成的和 / 或是不推荐使用的
+     * @param name 方法的名称
+     * @param desc 方法的描述符
+     * @param signature 方法的签名。如果方法参数、返回类型和异常不使用泛型类型，则可能为null。
+     * @param exceptions 方法异常类的内部名称 。可能为空
+     * @return 访问方法字节代码的对象，如果该类访问者对访问该方法的代码没有关系，则为null。
+     */
+    @Override
+    public final MethodVisitor visitMethod(final int access, final String name,
+                                           final String desc, final String signature, final String[] exceptions) {
 
+        // System.out.println("----------5.5--------" + "ClassProbesAdapter # visitMethod");
+        // System.out.println(access);
+        // System.out.println(name);
+        // System.out.println(desc);
+        // System.out.println(signature);
+        // System.out.println(Arrays.toString(exceptions));
+        // System.out.println(this.name);
+
+        final MethodProbesVisitor methodProbes;
+        /**
+         * 当访问一个方法时，我们需要一个{@link MethodProbesVisitor}来处理该方法的探测。
+         * cv == ClassAnalyzer, mv = MethodAnalyzer的匿名内部子类
+         */
+        final MethodProbesVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
+
+        // System.out.println(name);
+        // System.out.println("----------------");
+
+        // if (mv != null && (diffMethod == null || diffMethod.isEmpty() || diffMethod.containsKey(name))) {
+        if (mv != null) {
+            methodProbes = mv;
+        } else {
+            // 在任何情况下，我们都需要访问该方法，否则探针id是不可复制的
+            methodProbes = EMPTY_METHOD_PROBES_VISITOR;
+        }
+
+        // 方法消除器
+        return new MethodSanitizer(null, access, name, desc, signature, exceptions) {
+
+            @Override
+            public void visitEnd() {
+
+                // System.out.println("----------7----------" + "ClassProbesAdapter $ MethodSanitizer # visitEnd");
+
+                super.visitEnd();
+                // 标记流量分析器    标记标签
+                LabelFlowAnalyzer.markLabels(this);
+
+                // 初始化 MethodVisitor 类
+                final MethodProbesAdapter probesAdapter = new MethodProbesAdapter(methodProbes, ClassProbesAdapter.this);
+
+                if (trackFrames) {
+
+                    final AnalyzerAdapter analyzer = new AnalyzerAdapter(ClassProbesAdapter.this.name, access, name, desc, probesAdapter);
+
+                    probesAdapter.setAnalyzer(analyzer);
+
+                    methodProbes.accept(this, analyzer);
+                } else {
+                    methodProbes.accept(this, probesAdapter);
+                }
+            }
+        };
+    }
+
+    @Override
+    public void visitEnd() {
+        cv.visitTotalProbeCount(counter);
+        super.visitEnd();
+    }
+
+    // === IProbeIdGenerator ===
+
+    public int nextId() {
+        return counter++;
+    }
+
+    public ClassAnalyzer getCv() {
+        return (ClassAnalyzer) cv;
+    }
+
+    @Override
+    public String toString() {
+        return "ClassProbesAdapter{" +
+                "cv=" + cv +
+                ", name='" + name + '\'' +
+                "} ";
+    }
 }

@@ -14,64 +14,152 @@ package org.jacoco.core.internal.analysis;
 import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.IMethodCoverage;
 
+import java.util.Map;
+import java.util.regex.Pattern;
+
 /**
- * Implementation of {@link IMethodCoverage}.
+ * Implementation of {@link IMethodCoverage}.单一方法的覆盖数据。此节点的名称是本地方法名称。
  */
-public class MethodCoverageImpl extends SourceNodeImpl implements
-		IMethodCoverage {
+public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverage {
 
-	private final String desc;
+    private final String desc;
 
-	private final String signature;
+    private final String signature;
 
-	/**
-	 * Creates a method coverage data object with the given parameters.
-	 * 
-	 * @param name
-	 *            name of the method
-	 * @param desc
-	 *            method descriptor
-	 * @param signature
-	 *            generic signature or <code>null</code>
-	 */
-	public MethodCoverageImpl(final String name, final String desc,
-			final String signature) {
-		super(ElementType.METHOD, name);
-		this.desc = desc;
-		this.signature = signature;
-	}
+    private final String methodName;
 
-	@Override
-	public void increment(final ICounter instructions, final ICounter branches,
-			final int line) {
-		super.increment(instructions, branches, line);
-		// Additionally increment complexity counter:
-		if (branches.getTotalCount() > 1) {
-			final int c = Math.max(0, branches.getCoveredCount() - 1);
-			final int m = Math.max(0, branches.getTotalCount() - c - 1);
-			this.complexityCounter = this.complexityCounter.increment(m, c);
-		}
-	}
+    private final boolean flag;
 
-	/**
-	 * This method must be called exactly once after all instructions and
-	 * branches have been incremented for this method coverage node.
-	 */
-	public void incrementMethodCounter() {
-		final ICounter base = this.instructionCounter.getCoveredCount() == 0 ? CounterImpl.COUNTER_1_0
-				: CounterImpl.COUNTER_0_1;
-		this.methodCounter = this.methodCounter.increment(base);
-		this.complexityCounter = this.complexityCounter.increment(base);
-	}
+    private final Map<String, String> methods;
 
-	// === IMethodCoverage implementation ===
+    private final String className;
+    /**
+     * 使用给定参数创建方法覆盖数据对象。
+     *
+     * @param name      方法的名称
+     * @param desc      方法描述符
+     * @param signature 方法签名
+     */
+    public MethodCoverageImpl(final String name, final String desc, final String signature) {
+        super(ElementType.METHOD, name);
+        this.methodName = name;
+        this.desc = desc;
+        this.signature = signature;
 
-	public String getDesc() {
-		return desc;
-	}
+        this.flag = false;
+        this.methods = null;
+        this.className = null;
+    }
 
-	public String getSignature() {
-		return signature;
-	}
+    /**
+     * 使用给定参数创建方法覆盖数据对象。
+     *
+     * @param name      方法的名称
+     * @param desc      方法描述符
+     * @param signature 方法签名
+     */
+    public MethodCoverageImpl(final String name, final String desc, final String signature, final ClassCoverageImpl coverage) {
+        super(ElementType.METHOD, name);
+        this.methodName = name;
+        this.desc = desc;
+        this.signature = signature;
 
+        this.flag = true;
+        this.methods = coverage.getCoveredMethods();
+        this.className = coverage.getClassName();
+    }
+
+    @Override
+    public void increment(final ICounter instructions, final ICounter branches, final int line) {
+        super.increment(instructions, branches, line);
+        // 额外增加复杂性计数器
+        if (branches.getTotalCount() > 1) {
+            final int c = Math.max(0, branches.getCoveredCount() - 1);
+            final int m = Math.max(0, branches.getTotalCount() - c - 1);
+            this.complexityCounter = this.complexityCounter.increment(m, c);
+        }
+    }
+
+    /**
+     * 此方法必须在此方法覆盖节点的所有指令和分支递增后准确调用一次。
+     */
+    public void incrementMethodCounter() {
+
+        // System.out.println("----------10.9-------" + "MethodCoverageImpl # incrementMethodCounter");
+        // System.out.println(this.instructionCounter.getCoveredCount());
+        // System.out.println(this.branchCounter);
+        // System.out.println(this.instructionCounter);
+        // System.out.println(this.lineCounter);
+        // System.out.println(this.complexityCounter);
+        // System.out.println(this.methodCounter);
+        // System.out.println(this.classCounter);
+        // System.out.println("=========================================");
+        /**
+         * 指令计数器为0时 说明该方法未被覆盖
+         * <p>
+         *     因为每个方法中的每一行代码都对应着一个探针元素
+         *     所以当单个方法中的指令计数等于0时, 说明该方法未被执行, 即未被覆盖
+         * </p>
+         *
+         * 将指令计数器运算转换为方法计数器
+         */
+        ICounter base = null;
+
+        if (this.instructionCounter.getCoveredCount() == 0) {
+            base = CounterImpl.COUNTER_1_0;
+        } else {
+            base = CounterImpl.COUNTER_0_1;
+
+            // 通过flag来判断是否记录覆盖方法
+            if (flag) {
+
+                // init = 构造函数, clinit = 静态方法块
+                if (!"<init>".equals(methodName) && !"<clinit>".equals(methodName)) {
+                    System.out.println(methodName);
+                    System.out.println(className);
+                    methods.put(methodName, className);
+                }
+
+
+
+            }
+        }
+        // System.out.println(base);
+        // System.out.println(flag);
+
+        // System.out.println(base);
+        // System.out.println(desc);
+        // System.out.println(name);
+        if (base == null) {
+            throw new RuntimeException("覆盖率计数器 base 未正确赋值");
+        }
+
+        this.methodCounter = this.methodCounter.increment(base);
+        this.complexityCounter = this.complexityCounter.increment(base);
+    }
+
+    // === IMethodCoverage implementation ===
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    @Override
+    public String toString() {
+        return "MethodCoverageImpl{" +
+                "desc='" + desc + '\'' +
+                ", signature='" + signature + '\'' +
+                ", methodName='" + methodName + '\'' +
+                ", branchCounter=" + branchCounter +
+                ", instructionCounter=" + instructionCounter +
+                ", lineCounter=" + lineCounter +
+                ", complexityCounter=" + complexityCounter +
+                ", methodCounter=" + methodCounter +
+                ", classCounter=" + classCounter +
+                "} ";
+    }
 }

@@ -12,140 +12,139 @@
 package org.jacoco.core.analysis;
 
 /**
- * Interface for hierarchical coverage data nodes with different coverage
- * counters.
+ * 具有不同覆盖计数器的分层覆盖数据节点的接口
  */
 public interface ICoverageNode {
 
-	/**
-	 * Type of a Java element represented by a {@link ICoverageNode} instance.
-	 */
-	enum ElementType {
+    /**
+     * 由{@link ICoverageNode}实例表示的Java元素的类型。
+     */
+    enum ElementType {
 
-		/** Method */
-		METHOD,
+        /** Method */
+        METHOD,
 
-		/** Class */
-		CLASS,
+        /** Class */
+        CLASS,
 
-		/** Source File */
-		SOURCEFILE,
+        /** Source File */
+        SOURCEFILE,
 
-		/** Java Package */
-		PACKAGE,
+        /** Java 包 */
+        PACKAGE,
 
-		/** Bundle of Packages */
-		BUNDLE,
+        /** 捆绑包 */
+        BUNDLE,
 
-		/** Logical Group of Bundles */
-		GROUP,
+        /** 包的逻辑组 */
+        GROUP,
 
-	}
+    }
 
-	/**
-	 * Different counter types supported by JaCoCo.
-	 */
-	enum CounterEntity {
+    /**
+     * JaCoCo支持不同的计数器类型
+     */
+    enum CounterEntity {
 
-		/** Counter for instructions */
-		INSTRUCTION,
+        /** 指令计数器 */
+        INSTRUCTION,
 
-		/** Counter for branches */
-		BRANCH,
+        /** 分支计数器 */
+        BRANCH,
 
-		/** Counter for source lines */
-		LINE,
+        /** 行计数器 */
+        LINE,
 
-		/** Counter for cyclomatic complexity */
-		COMPLEXITY,
+        /** 圈复杂度计数器 */
+        COMPLEXITY,
 
-		/** Counter for methods */
-		METHOD,
+        /** 方法计数器 */
+        METHOD,
 
-		/** Counter for classes */
-		CLASS
-	}
+        /** class计数器 */
+        CLASS
+    }
 
-	/**
-	 * Returns the type of element represented by this node.
-	 * 
-	 * @return type of this node
-	 */
-	ElementType getElementType();
+    /**
+     * Returns the type of element represented by this node.
+     *
+     * @return type of this node
+     */
+    ElementType getElementType();
 
-	/**
-	 * Returns the name of this node.
-	 * 
-	 * @return name of this node
-	 */
-	String getName();
+    /**
+     * Returns the name of this node.
+     *
+     * @return name of this node
+     */
+    String getName();
 
-	/**
-	 * Returns the counter for byte code instructions.
-	 * 
-	 * @return counter for instructions
-	 */
-	ICounter getInstructionCounter();
+    /**
+     * Returns the counter for byte code instructions.
+     *
+     * @return counter for instructions
+     */
+    ICounter getInstructionCounter();
 
-	/**
-	 * Returns the counter for branches.
-	 * 
-	 * @return counter for branches
-	 */
-	ICounter getBranchCounter();
+    /**
+     * Returns the counter for branches.
+     *
+     * @return counter for branches
+     */
+    ICounter getBranchCounter();
 
-	/**
-	 * Returns the counter for lines.
-	 * 
-	 * @return counter for lines
-	 */
-	ICounter getLineCounter();
+    /**
+     * Returns the counter for lines.
+     *
+     * @return counter for lines
+     */
+    ICounter getLineCounter();
 
-	/**
-	 * Returns the counter for cyclomatic complexity.
-	 * 
-	 * @return counter for complexity
-	 */
-	ICounter getComplexityCounter();
+    /**
+     * Returns the counter for cyclomatic complexity.
+     *
+     * @return counter for complexity
+     */
+    ICounter getComplexityCounter();
 
-	/**
-	 * Returns the counter for methods.
-	 * 
-	 * @return counter for methods
-	 */
-	ICounter getMethodCounter();
+    /**
+     * Returns the counter for methods.
+     *
+     * @return counter for methods
+     */
+    ICounter getMethodCounter();
 
-	/**
-	 * Returns the counter for classes.
-	 * 
-	 * @return counter for classes
-	 */
-	ICounter getClassCounter();
+    /**
+     * Returns the counter for classes.
+     *
+     * @return counter for classes
+     */
+    ICounter getClassCounter();
 
-	/**
-	 * Generic access to the the counters.
-	 * 
-	 * @param entity
-	 *            entity we're we want to have the counter for
-	 * @return counter for the given entity
-	 */
-	ICounter getCounter(CounterEntity entity);
+    /**
+     * 对计数器的一般访问
+     *
+     * @param entity
+     *            entity we're we want to have the counter for
+     * @return counter for the given entity
+     */
+    ICounter getCounter(CounterEntity entity);
 
-	/**
-	 * Checks whether this node contains code relevant for code coverage.
-	 *
-	 * @return <code>true</code> if this node contains code relevant for code coverage
-	 */
-	boolean containsCode();
+    /**
+     * 检查此节点是否包含与代码覆盖率相关的代码。
+     *
+     * @return <code>true</code> 如果包含, 则为true
+     */
+    boolean containsCode();
 
-	/**
-	 * Creates a plain copy of this node. While {@link ICoverageNode}
-	 * implementations may contain heavy data structures, the copy returned by
-	 * this method is reduced to the counters only. This helps to save memory
-	 * while processing huge structures.
-	 * 
-	 * @return copy with counters only
-	 */
-	ICoverageNode getPlainCopy();
+    /**
+     * 创建此节点的纯拷贝。
+     * 虽然{@link ICoverageNode}实现可能包含大量数据结构，
+     * 但此方法返回的副本仅会减少到计数器。
+     * 这有助于在处理大型结构时节省内存。
+     *
+     * @return copy with counters only
+     */
+    ICoverageNode getPlainCopy();
 
 }

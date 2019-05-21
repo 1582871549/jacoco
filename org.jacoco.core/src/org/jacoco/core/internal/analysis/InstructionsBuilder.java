@@ -7,14 +7,11 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.core.internal.analysis;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.jacoco.core.analysis.ISourceNode;
 import org.jacoco.core.internal.flow.LabelInfo;
@@ -22,165 +19,162 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.AbstractInsnNode;
 
 /**
- * Stateful builder for the {@link Instruction}s of a method. All instructions
- * of a method must be added in their original sequence along with additional
- * information like line numbers. Afterwards the instructions can be obtained
- * with the <code>getInstructions()</code> method.
+ * 方法指令( Instruction )的状态生成器
+ * 一个方法的所有指令必须按照它们的原始顺序加上附加信息，如行号。
+ * 之后，可以使用getInstructions方法获得说明
  */
 class InstructionsBuilder {
 
-	/** Probe array of the class the analyzed method belongs to. */
-	private final boolean[] probes;
+    /** 分析方法所属类别的探针阵列 */
+    private final boolean[] probes;
 
-	/** The line which belong to subsequently added instructions. */
-	private int currentLine;
+    /** 属于随后添加的说明的行 */
+    private int currentLine;
 
-	/** The last instruction which has been added. */
-	private Instruction currentInsn;
+    /** 最后添加的指令 */
+    private Instruction currentInsn;
 
-	/**
-	 * All instructions of a method mapped from the ASM node to the
-	 * corresponding {@link Instruction} instance.
-	 */
-	private final Map<AbstractInsnNode, Instruction> instructions;
+    /** 方法的所有指令从ASM节点映射到相应的指令实例 */
+    private final Map<AbstractInsnNode, Instruction> instructions;
 
-	/**
-	 * The labels which mark the subsequent instructions.
-	 * 
-	 * Due to ASM issue #315745 there can be more than one label per instruction
-	 */
-	private final List<Label> currentLabel;
+    /** 标记后续说明的标签。 由于ASM问题#315745，每个指令可以有多个标签 */
+    private final List<Label> currentLabel;
 
-	/**
-	 * List of all jumps within the control flow. We need to store jumps
-	 * temporarily as the target {@link Instruction} may not been known yet.
-	 */
-	private final List<Jump> jumps;
+    /** 控制流中所有跳转的列表。 我们需要暂时存储，因为目标指令可能还不知道 */
+    private final List<Jump> jumps;
 
-	/**
-	 * Creates a new builder instance which can be used to analyze a single
-	 * method.
-	 * 
-	 * @param probes
-	 *            probe array of the corresponding class used to determine the
-	 *            coverage status of every instruction.
-	 */
-	InstructionsBuilder(final boolean[] probes) {
-		this.probes = probes;
-		this.currentLine = ISourceNode.UNKNOWN_LINE;
-		this.currentInsn = null;
-		this.instructions = new HashMap<AbstractInsnNode, Instruction>();
-		this.currentLabel = new ArrayList<Label>(2);
-		this.jumps = new ArrayList<Jump>();
-	}
+    /**
+     * 创建一个可用于分析单个方法的新构建器实例
+     *
+     * @param probes 用于确定每条指令覆盖状态的相应类的探测数组
+     */
+    InstructionsBuilder(final boolean[] probes) {
 
-	/**
-	 * Sets the current source line. All subsequently added instructions will be
-	 * assigned to this line. If no line is set (e.g. for classes compiled
-	 * without debug information) {@link ISourceNode#UNKNOWN_LINE} is assigned
-	 * to the instructions.
-	 */
-	void setCurrentLine(final int line) {
-		currentLine = line;
-	}
+        // System.out.println("----------6.5--------" + "InstructionsBuilder # init( probes )");
+        this.probes = probes;
+        this.currentLine = ISourceNode.UNKNOWN_LINE; // 初始值为 -1
+        this.currentInsn = null;
+        this.instructions = new HashMap<AbstractInsnNode, Instruction>();
+        this.currentLabel = new ArrayList<Label>(2);
+        this.jumps = new ArrayList<Jump>();
+    }
 
-	/**
-	 * Adds a label which applies to the subsequently added instruction. Due to
-	 * ASM internals multiple {@link Label}s can be added to an instruction.
-	 */
-	void addLabel(final Label label) {
-		currentLabel.add(label);
-		if (!LabelInfo.isSuccessor(label)) {
-			noSuccessor();
-		}
-	}
+    /**
+     * 设置当前 source 行。
+     * 所有随后添加的指令都将分配给该行。
+     * 如果没有设置行(例如，对于没有调试信息编译的类) {@link ISourceNode#UNKNOWN_LINE}被分配给指令
+     */
+    void setCurrentLine(final int line) {
+        currentLine = line;
+    }
 
-	/**
-	 * Adds a new instruction. Instructions are by default linked with the
-	 * previous instruction unless specified otherwise.
-	 */
-	void addInstruction(final AbstractInsnNode node) {
-		final Instruction insn = new Instruction(currentLine);
-		final int labelCount = currentLabel.size();
-		if (labelCount > 0) {
-			for (int i = labelCount; --i >= 0;) {
-				LabelInfo.setInstruction(currentLabel.get(i), insn);
-			}
-			currentLabel.clear();
-		}
-		if (currentInsn != null) {
-			currentInsn.addBranch(insn, 0);
-		}
-		currentInsn = insn;
-		instructions.put(node, insn);
-	}
+    /**
+     * 添加适用于随后添加的指令的标签。
+     * 由于ASM内部结构，可以向指令中添加多个{@link Label}。
+     */
+    void addLabel(final Label label) {
+        currentLabel.add(label);
+        if (!LabelInfo.isSuccessor(label)) {
+            noSuccessor();
+        }
+    }
 
-	/**
-	 * Declares that the next instruction will not be a successor of the current
-	 * instruction. This is the case with an unconditional jump or technically
-	 * when a probe was inserted before.
-	 */
-	void noSuccessor() {
-		currentInsn = null;
-	}
+    /**
+     * 添加新指令。
+     * 除非另有说明，否则默认情况下指令与前一条指令链接。
+     */
+    void addInstruction(final AbstractInsnNode node) {
+        final Instruction insn = new Instruction(currentLine);
+        final int labelCount = currentLabel.size();
+        if (labelCount > 0) {
+            for (int i = labelCount; --i >= 0;) {
+                LabelInfo.setInstruction(currentLabel.get(i), insn);
+            }
+            currentLabel.clear();
+        }
+        if (currentInsn != null) {
+            currentInsn.addBranch(insn, 0);
+        }
+        currentInsn = insn;
+        instructions.put(node, insn);
+    }
 
-	/**
-	 * Adds a jump from the last added instruction.
-	 * 
-	 * @param target
-	 *            jump target
-	 * @param branch
-	 *            unique branch number
-	 */
-	void addJump(final Label target, final int branch) {
-		jumps.add(new Jump(currentInsn, target, branch));
-	}
+    /**
+     * 声明下一条指令不会是当前指令的后继指令。
+     * 这是无条件跳跃的情况，或者在技术上是探针插入之前的情况。
+     */
+    void noSuccessor() {
+        currentInsn = null;
+    }
 
-	/**
-	 * Adds a new probe for the last instruction.
-	 * 
-	 * @param probeId
-	 *            index in the probe array
-	 * @param branch
-	 *            unique branch number for the last instruction
-	 */
-	void addProbe(final int probeId, final int branch) {
-		final boolean executed = probes != null && probes[probeId];
-		currentInsn.addBranch(executed, branch);
-	}
+    /**
+     * 从最后添加的指令添加一个跳转。
+     *
+     * @param target 跳跃目标
+     * @param branch 唯一的分支号码
+     */
+    void addJump(final Label target, final int branch) {
+        jumps.add(new Jump(currentInsn, target, branch));
+    }
 
-	/**
-	 * Returns the status for all instructions of this method. This method must
-	 * be called exactly once after the instructions have been added.
-	 * 
-	 * @return map of ASM instruction nodes to corresponding {@link Instruction}
-	 *         instances
-	 */
-	Map<AbstractInsnNode, Instruction> getInstructions() {
-		// Wire jumps:
-		for (final Jump j : jumps) {
-			j.wire();
-		}
+    /**
+     * 为最后一条指令添加新探针。
+     *
+     * @param probeId   探针阵列中的索引
+     * @param branch    最后一条指令的唯一分支号
+     */
+    void addProbe(final int probeId, final int branch) {
+        final boolean executed = probes != null && probes[probeId];
+        currentInsn.addBranch(executed, branch);
+    }
 
-		return instructions;
-	}
+    /**
+     * 返回此方法所有指令的状态。
+     * 添加指令后，必须准确调用此方法一次。
+     *
+     * @return 将ASM指令节点映射到相应的{@link Instruction}实例
+     */
+    Map<AbstractInsnNode, Instruction> getInstructions() {
+        // 跳线:
+        for (final Jump j : jumps) {
+            j.wire();
+        }
 
-	private static class Jump {
+        return instructions;
+    }
 
-		private final Instruction source;
-		private final Label target;
-		private final int branch;
+    private static class Jump {
 
-		Jump(final Instruction source, final Label target, final int branch) {
-			this.source = source;
-			this.target = target;
-			this.branch = branch;
-		}
+        private final Instruction source;
+        private final Label target;
+        private final int branch;
 
-		void wire() {
-			source.addBranch(LabelInfo.getInstruction(target), branch);
-		}
+        Jump(final Instruction source, final Label target, final int branch) {
+            this.source = source;
+            this.target = target;
+            this.branch = branch;
+        }
 
-	}
+        void wire() {
+            source.addBranch(LabelInfo.getInstruction(target), branch);
+        }
 
+    }
+
+    /**
+     * 输出打印参数
+     * @auther dudu
+     * @return
+     */
+    @Override
+    public String toString() {
+        return "InstructionsBuilder{" +
+                "probes=" + Arrays.toString(probes) +
+                ", currentLine=" + currentLine +
+                ", currentInsn=" + currentInsn +
+                ", instructions=" + instructions +
+                ", currentLabel=" + currentLabel +
+                ", jumps=" + jumps +
+                '}';
+    }
 }

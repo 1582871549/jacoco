@@ -25,154 +25,146 @@ import org.jacoco.core.internal.analysis.filter.IFilterOutput;
 import org.objectweb.asm.tree.AbstractInsnNode;
 
 /**
- * Calculates the filtered coverage of a single method. A instance of this class
- * can be first used as {@link IFilterOutput} before the coverage result is
- * calculated.
+ * 计算单个方法的过滤覆盖率。
+ * 在计算覆盖率结果之前，此类的实例可以首先用作{@link IFilterOutput}。
  */
 class MethodCoverageCalculator implements IFilterOutput {
 
-	private final Map<AbstractInsnNode, Instruction> instructions;
+    // 说明
+    private final Map<AbstractInsnNode, Instruction> instructions;
+    // 忽略
+    private final Set<AbstractInsnNode> ignored;
 
-	private final Set<AbstractInsnNode> ignored;
+    /**
+     * 应该合并成不相交集合的指令。来自一组指令的覆盖信息将被合并到该组的代表性指令中。
+     * 每个这样的集合被表示为一个单独的链表:
+     * 除了一个元素之外的每个元素引用同一集合中的另一个元素，
+     * 没有引用的元素是这个集合的代表。
+     * 该映射存储集合(键)元素的引用(值)。
+     */
+    private final Map<AbstractInsnNode, AbstractInsnNode> merged;
+    // 替换
+    private final Map<AbstractInsnNode, Set<AbstractInsnNode>> replacements;
 
-	/**
-	 * Instructions that should be merged form disjoint sets. Coverage
-	 * information from instructions of one set will be merged into
-	 * representative instruction of set.
-	 * 
-	 * Each such set is represented as a singly linked list: each element except
-	 * one references another element from the same set, element without
-	 * reference - is a representative of this set.
-	 * 
-	 * This map stores reference (value) for elements of sets (key).
-	 */
-	private final Map<AbstractInsnNode, AbstractInsnNode> merged;
+    MethodCoverageCalculator(final Map<AbstractInsnNode, Instruction> instructions) {
+        this.instructions = instructions;
+        this.ignored = new HashSet<>();
+        this.merged = new HashMap<>();
+        this.replacements = new HashMap<>();
+    }
 
-	private final Map<AbstractInsnNode, Set<AbstractInsnNode>> replacements;
+    /**
+     * 应用所有指定的过滤命令并计算结果覆盖率。
+     *
+     * @param coverage      结果被添加到这个覆盖节点
+     */
+    void calculate(final MethodCoverageImpl coverage) {
 
-	MethodCoverageCalculator(
-			final Map<AbstractInsnNode, Instruction> instructions) {
-		this.instructions = instructions;
-		this.ignored = new HashSet<AbstractInsnNode>();
-		this.merged = new HashMap<AbstractInsnNode, AbstractInsnNode>();
-		this.replacements = new HashMap<AbstractInsnNode, Set<AbstractInsnNode>>();
-	}
+        // System.out.println("----------10.5-------" + "MethodCoverageCalculator # calculate");
+        // System.out.println(coverage);
+        // System.out.println(instructions);
 
-	/**
-	 * Applies all specified filtering commands and calculates the resulting
-	 * coverage.
-	 * 
-	 * @param coverage
-	 *            the result is added to this coverage node
-	 */
-	void calculate(final MethodCoverageImpl coverage) {
-		applyMerges();
-		applyReplacements();
-		ensureCapacity(coverage);
+        applyMerges();
+        applyReplacements();
+        ensureCapacity(coverage);
 
-		for (final Entry<AbstractInsnNode, Instruction> entry : instructions
-				.entrySet()) {
-			if (!ignored.contains(entry.getKey())) {
-				final Instruction instruction = entry.getValue();
-				coverage.increment(instruction.getInstructionCounter(),
-						instruction.getBranchCounter(), instruction.getLine());
-			}
-		}
+        for (final Entry<AbstractInsnNode, Instruction> entry : instructions.entrySet()) {
+            if (!ignored.contains(entry.getKey())) {
+                final Instruction instruction = entry.getValue();
+                coverage.increment(instruction.getInstructionCounter(),
+                        instruction.getBranchCounter(), instruction.getLine());
+            }
+        }
 
-		coverage.incrementMethodCounter();
-	}
+        // System.out.println("----------10.8-------" + "MethodCoverageCalculator # calculate");
+        coverage.incrementMethodCounter();
+    }
 
-	private void applyMerges() {
-		// Merge to the representative:
-		for (final Entry<AbstractInsnNode, AbstractInsnNode> entry : merged
-				.entrySet()) {
-			final AbstractInsnNode node = entry.getKey();
-			final Instruction instruction = instructions.get(node);
-			final AbstractInsnNode representativeNode = findRepresentative(
-					node);
-			ignored.add(node);
-			instructions.put(representativeNode,
-					instructions.get(representativeNode).merge(instruction));
-			entry.setValue(representativeNode);
-		}
+    private void applyMerges() {
+        // 合并到 representative:
+        for (final Entry<AbstractInsnNode, AbstractInsnNode> entry : merged.entrySet()) {
+            final AbstractInsnNode node = entry.getKey();
+            final Instruction instruction = instructions.get(node);
+            final AbstractInsnNode representativeNode = findRepresentative(node);
+            ignored.add(node);
+            instructions.put(representativeNode, instructions.get(representativeNode).merge(instruction));
+            entry.setValue(representativeNode);
+        }
 
-		// Get merged value back from representative
-		for (final Entry<AbstractInsnNode, AbstractInsnNode> entry : merged
-				.entrySet()) {
-			instructions.put(entry.getKey(),
-					instructions.get(entry.getValue()));
-		}
-	}
+        // 从 representative 处获取合并值
+        for (final Entry<AbstractInsnNode, AbstractInsnNode> entry : merged.entrySet()) {
+            instructions.put(entry.getKey(), instructions.get(entry.getValue()));
+        }
+    }
 
-	private void applyReplacements() {
-		for (final Entry<AbstractInsnNode, Set<AbstractInsnNode>> entry : replacements
-				.entrySet()) {
-			final Set<AbstractInsnNode> replacements = entry.getValue();
-			final List<Instruction> newBranches = new ArrayList<Instruction>(
-					replacements.size());
-			for (final AbstractInsnNode b : replacements) {
-				newBranches.add(instructions.get(b));
-			}
-			final AbstractInsnNode node = entry.getKey();
-			instructions.put(node,
-					instructions.get(node).replaceBranches(newBranches));
-		}
-	}
+    private void applyReplacements() {
+        for (final Entry<AbstractInsnNode, Set<AbstractInsnNode>> entry : replacements.entrySet()) {
+            final Set<AbstractInsnNode> replacements = entry.getValue();
+            final List<Instruction> newBranches = new ArrayList<Instruction>(replacements.size());
+            for (final AbstractInsnNode b : replacements) {
+                newBranches.add(instructions.get(b));
+            }
+            final AbstractInsnNode node = entry.getKey();
+            instructions.put(node, instructions.get(node).replaceBranches(newBranches));
+        }
+    }
 
-	private void ensureCapacity(final MethodCoverageImpl coverage) {
-		// Determine line range:
-		int firstLine = ISourceFileCoverage.UNKNOWN_LINE;
-		int lastLine = ISourceFileCoverage.UNKNOWN_LINE;
-		for (final Entry<AbstractInsnNode, Instruction> entry : instructions
-				.entrySet()) {
-			if (!ignored.contains(entry.getKey())) {
-				final int line = entry.getValue().getLine();
-				if (line != ISourceNode.UNKNOWN_LINE) {
-					if (firstLine > line
-							|| lastLine == ISourceNode.UNKNOWN_LINE) {
-						firstLine = line;
-					}
-					if (lastLine < line) {
-						lastLine = line;
-					}
-				}
-			}
-		}
+    /**
+     * 保证容量
+     * @param coverage
+     */
+    private void ensureCapacity(final MethodCoverageImpl coverage) {
+        // 确定线路范围
+        int firstLine = ISourceFileCoverage.UNKNOWN_LINE;
+        int lastLine = ISourceFileCoverage.UNKNOWN_LINE;
+        for (final Entry<AbstractInsnNode, Instruction> entry : instructions.entrySet()) {
 
-		// Performance optimization to avoid incremental increase of line array:
-		coverage.ensureCapacity(firstLine, lastLine);
-	}
+            if (!ignored.contains(entry.getKey())) {
+                final int line = entry.getValue().getLine();
 
-	private AbstractInsnNode findRepresentative(AbstractInsnNode i) {
-		AbstractInsnNode r;
-		while ((r = merged.get(i)) != null) {
-			i = r;
-		}
-		return i;
-	}
+                if (line != ISourceNode.UNKNOWN_LINE) {
+                    if (firstLine > line || lastLine == ISourceNode.UNKNOWN_LINE) {
+                        firstLine = line;
+                    }
+                    if (lastLine < line) {
+                        lastLine = line;
+                    }
+                }
+            }
+        }
 
-	// === IFilterOutput API ===
+        // 性能优化以避免线阵列的增量增加:
+        coverage.ensureCapacity(firstLine, lastLine);
+    }
 
-	public void ignore(final AbstractInsnNode fromInclusive,
-			final AbstractInsnNode toInclusive) {
-		for (AbstractInsnNode i = fromInclusive; i != toInclusive; i = i
-				.getNext()) {
-			ignored.add(i);
-		}
-		ignored.add(toInclusive);
-	}
+    private AbstractInsnNode findRepresentative(AbstractInsnNode i) {
+        AbstractInsnNode r;
+        while ((r = merged.get(i)) != null) {
+            i = r;
+        }
+        return i;
+    }
 
-	public void merge(AbstractInsnNode i1, AbstractInsnNode i2) {
-		i1 = findRepresentative(i1);
-		i2 = findRepresentative(i2);
-		if (i1 != i2) {
-			merged.put(i2, i1);
-		}
-	}
+    // === IFilterOutput API ===
 
-	public void replaceBranches(final AbstractInsnNode source,
-			final Set<AbstractInsnNode> newTargets) {
-		replacements.put(source, newTargets);
-	}
+    public void ignore(final AbstractInsnNode fromInclusive, final AbstractInsnNode toInclusive) {
+
+        for (AbstractInsnNode i = fromInclusive; i != toInclusive; i = i.getNext()) {
+            ignored.add(i);
+        }
+        ignored.add(toInclusive);
+    }
+
+    public void merge(AbstractInsnNode i1, AbstractInsnNode i2) {
+        i1 = findRepresentative(i1);
+        i2 = findRepresentative(i2);
+        if (i1 != i2) {
+            merged.put(i2, i1);
+        }
+    }
+
+    public void replaceBranches(final AbstractInsnNode source, final Set<AbstractInsnNode> newTargets) {
+        replacements.put(source, newTargets);
+    }
 
 }

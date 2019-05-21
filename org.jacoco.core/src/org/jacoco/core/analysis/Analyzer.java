@@ -11,15 +11,6 @@
  *******************************************************************************/
 package org.jacoco.core.analysis;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.StringTokenizer;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
 import org.jacoco.core.data.ExecutionData;
 import org.jacoco.core.data.ExecutionDataStore;
 import org.jacoco.core.internal.ContentTypeDetector;
@@ -35,13 +26,22 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
 /**
- * An {@link Analyzer} instance processes a set of Java class files and
- * calculates coverage data for them. For each class file the result is reported
- * to a given {@link ICoverageVisitor} instance. In addition the
- * {@link Analyzer} requires a {@link ExecutionDataStore} instance that holds
- * the execution data for the classes to analyze. The {@link Analyzer} offers
- * several methods to analyze classes from a variety of sources.
+ * {@link Analyzer}实例处理一组Java类文件，并为它们计算覆盖率数据。
+ * 对于每个类文件，结果都会报告给给定的{@link ICoverageVisitor}实例。
+ * 此外，{@link Analyzer}需要一个{@link ExecutionDataStore}实例来保存要分析的类的执行数据。
+ * {@link Analyzer}提供了几种方法来分析来自各种来源的类。
  */
 public class Analyzer {
 
@@ -51,58 +51,88 @@ public class Analyzer {
 
     private final StringPool stringPool;
 
+    private final Map<String, String> diffMethod;
+
+    private Map<String, Map<String, String>> coveredMethods;
+
     /**
-     * Creates a new analyzer reporting to the given output.
+     * 创建向给定输出报告的新分析器。
      *
-     * @param executionData
-     *            execution data
-     * @param coverageVisitor
-     *            the output instance that will coverage data for every analyzed
-     *            class
+     * @param executionData 执行数据
+     * @param coverageVisitor   将覆盖每个分析类的数据的输出实例
      */
     public Analyzer(final ExecutionDataStore executionData,
                     final ICoverageVisitor coverageVisitor) {
         this.executionData = executionData;
         this.coverageVisitor = coverageVisitor;
         this.stringPool = new StringPool();
+        this.diffMethod = null;
+        this.coveredMethods = new HashMap<>();
     }
 
     /**
-     * Creates an ASM class visitor for analysis.
+     * 创建向给定输出报告的新分析器。
      *
-     * @param classid
-     *            id of the class calculated with {@link CRC64}
-     * @param className
-     *            VM name of the class
-     * @return ASM visitor to write class definition to
+     * @param executionData 执行数据
+     * @param coverageVisitor   将覆盖每个分析类的数据的输出实例
+     * @param diffMethod        code diff 得到的差异方法
      */
-    private ClassVisitor createAnalyzingVisitor(final long classid,
-                                                final String className) {
+    public Analyzer(final ExecutionDataStore executionData,
+                    final ICoverageVisitor coverageVisitor,
+                    final Map<String, String> diffMethod) {
+        this.executionData = executionData;
+        this.coverageVisitor = coverageVisitor;
+        this.stringPool = new StringPool();
+        this.diffMethod = diffMethod;
+        this.coveredMethods = new HashMap<>();
+    }
+
+    /**
+     * 创建一个ASM类访问者进行分析
+     *
+     * @param classid 使用{@link CRC64}计算的类id
+     * @param className 类的虚拟机名称
+     *
+     * @return 返回ASM访问者以写入类定义
+     */
+    private ClassVisitor createAnalyzingVisitor(final long classid, final String className) {
         final ExecutionData data = executionData.get(classid);
         final boolean[] probes;
         final boolean noMatch;
         if (data == null) {
             probes = null;
             noMatch = executionData.contains(className);
+
+            // data = null
+            // noMatch = false
+            // className = com/dudu/common/configuration/example/SchoolService
+
         } else {
             probes = data.getProbes();
             noMatch = false;
+
+            // data = ExecutionData[name=com/dudu/common/configuration/bean/MyProperties, id=757a079dccba7134]
+            // noMatch = false
+            // className = com/dudu/common/configuration/bean/MyProperties
         }
-        final ClassCoverageImpl coverage = new ClassCoverageImpl(className,
-                classid, noMatch);
-        final ClassAnalyzer analyzer = new ClassAnalyzer(coverage, probes,
-                stringPool) {
+
+        final ClassCoverageImpl coverage = new ClassCoverageImpl(className, classid, noMatch);
+
+        final ClassAnalyzer analyzer = new ClassAnalyzer(coverage, probes, stringPool) {
             @Override
             public void visitEnd() {
                 super.visitEnd();
                 coverageVisitor.visitCoverage(coverage);
             }
         };
-        return new ClassProbesAdapter(analyzer, false);
+        return new ClassProbesAdapter(analyzer, false, diffMethod);
     }
 
     private void analyzeClass(final byte[] source) {
         final long classId = CRC64.classId(source);
+
+        // 为给定字节的类创建{@link ClassReader}实例，即使其版本不受ASM支持。
+        // 截取函数支持    类阅读器
         final ClassReader reader = InstrSupport.classReaderFor(source);
         if ((reader.getAccess() & Opcodes.ACC_MODULE) != 0) {
             return;
@@ -110,9 +140,33 @@ public class Analyzer {
         if ((reader.getAccess() & Opcodes.ACC_SYNTHETIC) != 0) {
             return;
         }
-        final ClassVisitor visitor = createAnalyzingVisitor(classId,
-                reader.getClassName());
+        final ClassVisitor visitor = createAnalyzingVisitor(classId, reader.getClassName());
+
+        // System.out.println(visitor);
+        /*
+         * visitor必须是此类的访问者。
+         * parsingOptions用于分析此类的选项
+         */
         reader.accept(visitor, 0);
+
+        ClassProbesAdapter adapter = (ClassProbesAdapter)visitor;
+
+        Map<String, String> coveredMethod = adapter.getCv().getCoverage().getCoveredMethods();
+
+        for (Map.Entry<String, String> entry : coveredMethod.entrySet()) {
+
+            // System.out.println(entry);
+
+            String key = entry.getKey();
+
+            String value = entry.getValue();
+
+            if (key != null) {
+                coveredMethods.put(value, coveredMethod);
+            }
+        }
+        // System.out.println("-----------------------------------------");
+        // System.out.println(visitor);
     }
 
     /**
@@ -203,10 +257,8 @@ public class Analyzer {
     }
 
     /**
-     * Analyzes all class files contained in the given file or folder. Class
-     * files as well as ZIP files are considered. Folders are searched
-     * recursively.
-     *
+     * 分析给定文件或文件夹中包含的所有class文件。class文件和ZIP文件都被考虑。
+     * 文件夹被递归搜索。
      * @param file
      *            file or folder to look for class files
      * @return number of class files found
@@ -297,4 +349,7 @@ public class Analyzer {
         return analyzeAll(unpackedInput, location);
     }
 
+    public Map<String, Map<String, String>> getCoveredMethods() {
+        return coveredMethods;
+    }
 }

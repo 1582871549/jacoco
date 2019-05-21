@@ -7,7 +7,7 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.report.internal;
 
@@ -20,90 +20,84 @@ import org.jacoco.report.IReportGroupVisitor;
 import org.jacoco.report.ISourceFileLocator;
 
 /**
- * Internal base visitor to calculate group counter summaries for hierarchical
- * reports.
+ * 内部基本访问者计算分层报告的组计数器摘要
  */
 public abstract class AbstractGroupVisitor implements IReportGroupVisitor {
 
-	/** coverage node for this group to total counters */
-	protected final CoverageNodeImpl total;
+    /** 此组的覆盖节点到总计数器 */
+    protected final CoverageNodeImpl total;
 
-	private AbstractGroupVisitor lastChild;
+    private AbstractGroupVisitor lastChild;
 
-	/**
-	 * Creates a new group with the given name.
-	 * 
-	 * @param name
-	 *            name for the coverage node created internally
-	 */
-	protected AbstractGroupVisitor(final String name) {
-		total = new CoverageNodeImpl(ElementType.GROUP, name);
-	}
+    /**
+     * 用给定的名称创建新组。
+     *
+     * @param name  内部创建的覆盖节点的名称
+     */
+    protected AbstractGroupVisitor(final String name) {
+        total = new CoverageNodeImpl(ElementType.GROUP, name);
+    }
 
-	public final void visitBundle(final IBundleCoverage bundle,
-			final ISourceFileLocator locator) throws IOException {
-		finalizeLastChild();
-		total.increment(bundle);
-		handleBundle(bundle, locator);
-	}
+    public final void visitBundle(final IBundleCoverage bundle, final ISourceFileLocator locator) throws IOException {
+        finalizeLastChild();
+        total.increment(bundle);
+        handleBundle(bundle, locator);
+    }
 
-	/**
-	 * Called to handle the given bundle in a specific way.
-	 * 
-	 * @param bundle
-	 *            analyzed bundle
-	 * @param locator
-	 *            source locator
-	 * @throws IOException
-	 *             if the report can't be written
-	 */
-	protected abstract void handleBundle(IBundleCoverage bundle,
-			ISourceFileLocator locator) throws IOException;
+    /**
+     * 调用以特定方式处理给定的包。
+     *
+     * @param bundle        分析包
+     * @param locator       源定位器
+     * @throws IOException  如果报告不能写
+     */
+    protected abstract void handleBundle(IBundleCoverage bundle, ISourceFileLocator locator) throws IOException;
 
-	public final IReportGroupVisitor visitGroup(final String name)
-			throws IOException {
-		finalizeLastChild();
-		lastChild = handleGroup(name);
-		return lastChild;
-	}
 
-	/**
-	 * Called to handle a group with the given name in a specific way.
-	 * 
-	 * @param name
-	 *            name of the group
-	 * @return created child group
-	 * @throws IOException
-	 *             if the report can't be written
-	 */
-	protected abstract AbstractGroupVisitor handleGroup(final String name)
-			throws IOException;
+    public final IReportGroupVisitor visitGroup(final String name)
+            throws IOException {
+        finalizeLastChild();
+        lastChild = handleGroup(name);
+        return lastChild;
+    }
 
-	/**
-	 * Must be called at the end of every group.
-	 * 
-	 * @throws IOException
-	 *             if the report can't be written
-	 */
-	public final void visitEnd() throws IOException {
-		finalizeLastChild();
-		handleEnd();
-	}
+    /**
+     * Called to handle a group with the given name in a specific way.
+     *
+     * @param name
+     *            name of the group
+     * @return created child group
+     * @throws IOException
+     *             if the report can't be written
+     */
+    protected abstract AbstractGroupVisitor handleGroup(final String name)
+            throws IOException;
 
-	/**
-	 * Called to handle the end of this group in a specific way.
-	 * 
-	 * @throws IOException
-	 *             if the report can't be written
-	 */
-	protected abstract void handleEnd() throws IOException;
+    /**
+     * Must be called at the end of every group.
+     *
+     * @throws IOException
+     *             if the report can't be written
+     */
+    public final void visitEnd() throws IOException {
+        finalizeLastChild();
+        handleEnd();
+    }
 
-	private void finalizeLastChild() throws IOException {
-		if (lastChild != null) {
-			lastChild.visitEnd();
-			total.increment(lastChild.total);
-			lastChild = null;
-		}
-	}
+    /**
+     * Called to handle the end of this group in a specific way.
+     *
+     * @throws IOException
+     *             if the report can't be written
+     */
+    protected abstract void handleEnd() throws IOException;
+
+    private void finalizeLastChild() throws IOException {
+        if (lastChild != null) {
+            lastChild.visitEnd();
+            total.increment(lastChild.total);
+            lastChild = null;
+        }
+    }
 
 }
