@@ -1,11 +1,10 @@
 package org.jacoco.dudu;
 
-import org.jacoco.core.analysis.Analyzer;
-import org.jacoco.core.analysis.CoverageBuilder;
-import org.jacoco.core.analysis.IBundleCoverage;
+import org.jacoco.core.analysis.*;
 import org.jacoco.core.data.ExecutionData;
 import org.jacoco.core.data.ExecutionDataStore;
 import org.jacoco.core.data.SessionInfo;
+import org.jacoco.core.internal.analysis.ClassCoverageImpl;
 import org.jacoco.core.tools.ExecFileLoader;
 import org.jacoco.report.DirectorySourceFileLocator;
 import org.jacoco.report.FileMultiReportOutput;
@@ -67,44 +66,65 @@ public class CoverageReport {
          */
         analyzer.analyzeAll(classesDirectory);
 
-        Map<String, Map<String, String>> methods = analyzer.getCoveredMethods();
+        /* **************************************           输出报告            *****************************************/
+
+        Collection<IClassCoverage> classes = coverageBuilder.getClasses();
+        for (IClassCoverage aClass : classes) {
+
+            ClassCoverageImpl classCoverage = (ClassCoverageImpl)aClass;
+
+            Collection<IMethodCoverage> methods1 = classCoverage.getMethods();      // 该类下的所有方法
+            ICounter lineCounter = classCoverage.getLineCounter();                  // 该类下的指令计数器
+            ICounter methodCounter = classCoverage.getMethodCounter();              // 该类下的方法计数器
+            ICounter classCounter = classCoverage.getClassCounter();                // 该类下的类计数器
+
+            System.out.println(lineCounter + " --- " + methodCounter + " --- " + classCounter);
+
+            int line = lineCounter.getCoveredCount();
+            int lineTotal = lineCounter.getTotalCount();
+            int method = methodCounter.getCoveredCount();
+            int methodTotal = methodCounter.getTotalCount();
+            int classs = classCounter.getCoveredCount();
+            int classsTotal = classCounter.getTotalCount();
+
+            if (line != 0 && lineTotal != 0 && method != 0 && methodTotal != 0 && classs != 0 && classsTotal != 0) {
+                int i1 = line * 100 / lineTotal;
+                int i2 = method * 100 / methodTotal;
+                int i3 = classs * 100 / classsTotal;
+                System.out.println("lineCounter = " + i1 + "%" + " methodCounter = " + i2 + "%" + " classCounter = " + i3 + "%");
+            }
+            System.out.println("……………………………………………………………………………………………………………………………………");
+        }
 
         System.out.println("======================================");
-        for (Map.Entry<String, Map<String, String>> entry : methods.entrySet()) {
 
-            Map<String, String> map = entry.getValue();
+        Map<String, Map<String, String>> coveredMethods = new HashMap<>();
 
-            for (Map.Entry<String, String> mapEntry : map.entrySet()) {
+        for (IClassCoverage aClass : classes) {
 
-                System.out.println(mapEntry);
+            ClassCoverageImpl classCoverage = (ClassCoverageImpl)aClass;
+            Map<String, String> coveredMethod = classCoverage.getCoveredMethods();
+
+            for (Map.Entry<String, String> entry : coveredMethod.entrySet()) {
+
+                String key = entry.getKey();
+                String value = entry.getValue();
+
+                if (key != null) {
+                    coveredMethods.put(value, coveredMethod);
+                }
+                System.out.println(entry);
             }
         }
 
-
-        // myProperties                                         com/dudu/common/configuration/config/SchoolConfig
-        // schoolService                                        com/dudu/common/configuration/config/SchoolConfig
-        // paly                                                 com/dudu/common/configuration/example/impl/SecondarySchoolServiceImpl
-        // configure                                            com/dudu/DemoApplication
-        // <init>                                               com/dudu/service/impl/UserServiceImpl
-        // primarySchoolServiceImpl                             com/dudu/common/configuration/CustomAutoConfiguration
-        // userService                                          com/dudu/common/configuration/config/SchoolConfig
-        // <clinit>                                             com/dudu/service/impl/UserServiceImpl
-
-
-
-        // com/dudu/common/configuration/bean/MyProperties                                                      <init>
-        // com/dudu/common/configuration/example/impl/SecondarySchoolServiceImpl                                <init>
-        // com/dudu/common/configuration/CustomAutoConfiguration                                                primarySchoolServiceImpl
-        // com/dudu/DemoApplication                                                                             <init>
-        // com/dudu/service/impl/UserServiceImpl                                                                <clinit>
-        // com/dudu/common/configuration/config/SchoolConfig                                                    userService
-        // com/dudu/common/configuration/example/impl/PrimarySchoolServiceImpl                                  <init>
-        // com/dudu/controller/UserController                                                                   <init>
-
-
-
-
-        /* **************************************           输出报告            *****************************************/
+        // 覆盖方法集合
+        System.out.println("================================================");
+        for (Map.Entry<String, Map<String, String>> entry : coveredMethods.entrySet()) {
+            Map<String, String> map = entry.getValue();
+            for (Map.Entry<String, String> mapEntry : map.entrySet()) {
+                System.out.println(mapEntry);
+            }
+        }
 
         // 设置覆盖率html包的标题名称
         IBundleCoverage bundleCoverage = coverageBuilder.getBundle("title");

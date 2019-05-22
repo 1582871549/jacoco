@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.zip.GZIPInputStream;
@@ -53,7 +52,6 @@ public class Analyzer {
 
     private final Map<String, String> diffMethod;
 
-    private Map<String, Map<String, String>> coveredMethods;
 
     /**
      * 创建向给定输出报告的新分析器。
@@ -67,7 +65,6 @@ public class Analyzer {
         this.coverageVisitor = coverageVisitor;
         this.stringPool = new StringPool();
         this.diffMethod = null;
-        this.coveredMethods = new HashMap<>();
     }
 
     /**
@@ -84,7 +81,6 @@ public class Analyzer {
         this.coverageVisitor = coverageVisitor;
         this.stringPool = new StringPool();
         this.diffMethod = diffMethod;
-        this.coveredMethods = new HashMap<>();
     }
 
     /**
@@ -149,22 +145,22 @@ public class Analyzer {
          */
         reader.accept(visitor, 0);
 
-        ClassProbesAdapter adapter = (ClassProbesAdapter)visitor;
-
-        Map<String, String> coveredMethod = adapter.getCv().getCoverage().getCoveredMethods();
-
-        for (Map.Entry<String, String> entry : coveredMethod.entrySet()) {
-
-            // System.out.println(entry);
-
-            String key = entry.getKey();
-
-            String value = entry.getValue();
-
-            if (key != null) {
-                coveredMethods.put(value, coveredMethod);
-            }
-        }
+        // ClassProbesAdapter adapter = (ClassProbesAdapter)visitor;
+        //
+        // Map<String, String> coveredMethod = adapter.getCv().getCoverage().getCoveredMethods();
+        //
+        // for (Map.Entry<String, String> entry : coveredMethod.entrySet()) {
+        //
+        //     // System.out.println(entry);
+        //
+        //     String key = entry.getKey();
+        //
+        //     String value = entry.getValue();
+        //
+        //     if (key != null) {
+        //         coveredMethods.put(value, coveredMethod);
+        //     }
+        // }
         // System.out.println("-----------------------------------------");
         // System.out.println(visitor);
     }
@@ -349,7 +345,4 @@ public class Analyzer {
         return analyzeAll(unpackedInput, location);
     }
 
-    public Map<String, Map<String, String>> getCoveredMethods() {
-        return coveredMethods;
-    }
 }

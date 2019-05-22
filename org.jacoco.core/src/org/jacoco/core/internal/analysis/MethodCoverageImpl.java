@@ -115,8 +115,8 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
 
                 // init = 构造函数, clinit = 静态方法块
                 if (!"<init>".equals(methodName) && !"<clinit>".equals(methodName)) {
-                    System.out.println(methodName);
-                    System.out.println(className);
+                    // System.out.println(methodName);
+                    // System.out.println(className);
                     methods.put(methodName, className);
                 }
 
