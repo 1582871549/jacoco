@@ -98,6 +98,8 @@ public class CoverageReport {
 
         System.out.println("======================================");
 
+        List<String> methods = new ArrayList<>(11);
+
         Map<String, Map<String, String>> coveredMethods = new HashMap<>();
 
         for (IClassCoverage aClass : classes) {
@@ -107,11 +109,14 @@ public class CoverageReport {
 
             for (Map.Entry<String, String> entry : coveredMethod.entrySet()) {
 
+                // 方法名
                 String key = entry.getKey();
+                // 类名
                 String value = entry.getValue();
 
                 if (key != null) {
                     coveredMethods.put(value, coveredMethod);
+                    methods.add(value + "-" + key);
                 }
                 System.out.println(entry);
             }
@@ -125,6 +130,13 @@ public class CoverageReport {
                 System.out.println(mapEntry);
             }
         }
+
+        System.out.println("---------------------------------------");
+
+        for (String method : methods) {
+            System.out.println(method);
+        }
+
 
         // 设置覆盖率html包的标题名称
         IBundleCoverage bundleCoverage = coverageBuilder.getBundle("title");
