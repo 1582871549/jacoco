@@ -59,17 +59,13 @@ public class MergeExecFile {
     }
 
     /**
-     * 是否删除非必须的exec文件
-     *
-     * @param delete 默认为false, 不删除
+     * 删除非必须的exec文件
      */
-    private void deleteFile(boolean delete) {
-        if (delete) {
-            for (File execFile : execList) {
-                if (!EXEC_NAME.equals(execFile.getName())) {
-                    boolean flag = execFile.delete();
-                    System.out.println("文件是否删除成功 : " + flag);
-                }
+    private void deleteFile() {
+        for (File execFile : execList) {
+            if (!EXEC_NAME.equals(execFile.getName())) {
+                boolean flag = execFile.delete();
+                System.out.println("文件是否删除成功 : " + flag);
             }
         }
     }
@@ -188,7 +184,7 @@ public class MergeExecFile {
 
         merge.executeMerge(pathList);
 
-        merge.deleteFile(true);
+        merge.deleteFile();
     }
 
 }
