@@ -7,7 +7,7 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.report;
 
@@ -16,27 +16,30 @@ import java.io.OutputStream;
 
 /**
  * Interface to emit multiple binary files.
+ *
+ * 接口来发出多个二进制文件。
  */
 public interface IMultiReportOutput {
 
-	/**
-	 * Creates a file at the given local path. The returned {@link OutputStream}
-	 * has to be closed before the next document is created.
-	 * 
-	 * @param path
-	 *            local path to the new document
-	 * @return output for the content
-	 * @throws IOException
-	 *             if the creation fails
-	 */
-	OutputStream createFile(String path) throws IOException;
+    /**
+     * Creates a file at the given local path. The returned {@link OutputStream}
+     * has to be closed before the next document is created.
+     *
+     * 在给定的本地路径创建文件。在创建下一个文档之前，必须关闭返回的{@link OutputStream}。
+     *
+     * @param path 新文档的本地路径
+     * @return 输出内容
+     * @throws IOException 如果创建失败
+     */
+    OutputStream createFile(String path) throws IOException;
 
-	/**
-	 * Closes the underlying resource container.
-	 * 
-	 * @throws IOException
-	 *             if closing fails
-	 */
-	void close() throws IOException;
+    /**
+     * Closes the underlying resource container.
+     *
+     * 关闭基础资源容器
+     *
+     * @throws IOException 如果关闭失败
+     */
+    void close() throws IOException;
 
 }

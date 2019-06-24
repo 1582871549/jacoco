@@ -30,7 +30,7 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
 
     private final boolean flag;
 
-    private final Map<String, String> methods;
+    private final Map<String, String> coveredMethods;
 
     private final String className;
     /**
@@ -47,7 +47,7 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
         this.signature = signature;
 
         this.flag = false;
-        this.methods = null;
+        this.coveredMethods = null;
         this.className = null;
     }
 
@@ -65,7 +65,7 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
         this.signature = signature;
 
         this.flag = true;
-        this.methods = coverage.getCoveredMethods();
+        this.coveredMethods = coverage.getCoveredMethods();
         this.className = coverage.getClassName();
     }
 
@@ -117,7 +117,7 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
                 if (!"<init>".equals(methodName) && !"<clinit>".equals(methodName)) {
                     // System.out.println(methodName);
                     // System.out.println(className);
-                    methods.put(methodName, className);
+                    coveredMethods.put(methodName, className);
                 }
 
 

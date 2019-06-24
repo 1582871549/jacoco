@@ -66,85 +66,56 @@ public class CoverageReport {
          */
         analyzer.analyzeAll(classesDirectory);
 
-        /* **************************************           输出报告            *****************************************/
-
         Collection<IClassCoverage> classes = coverageBuilder.getClasses();
-        for (IClassCoverage aClass : classes) {
 
-            ClassCoverageImpl classCoverage = (ClassCoverageImpl)aClass;
-
-            Collection<IMethodCoverage> methods1 = classCoverage.getMethods();      // 该类下的所有方法
-            ICounter lineCounter = classCoverage.getLineCounter();                  // 该类下的指令计数器
-            ICounter methodCounter = classCoverage.getMethodCounter();              // 该类下的方法计数器
-            ICounter classCounter = classCoverage.getClassCounter();                // 该类下的类计数器
-
-            System.out.println(lineCounter + " --- " + methodCounter + " --- " + classCounter);
-
-            int line = lineCounter.getCoveredCount();
-            int lineTotal = lineCounter.getTotalCount();
-            int method = methodCounter.getCoveredCount();
-            int methodTotal = methodCounter.getTotalCount();
-            int classs = classCounter.getCoveredCount();
-            int classsTotal = classCounter.getTotalCount();
-
-            if (line != 0 && lineTotal != 0 && method != 0 && methodTotal != 0 && classs != 0 && classsTotal != 0) {
-                int i1 = line * 100 / lineTotal;
-                int i2 = method * 100 / methodTotal;
-                int i3 = classs * 100 / classsTotal;
-                System.out.println("lineCounter = " + i1 + "%" + " methodCounter = " + i2 + "%" + " classCounter = " + i3 + "%");
-            }
-            System.out.println("……………………………………………………………………………………………………………………………………");
-        }
-
-        System.out.println("======================================");
-
-        List<String> methods = new ArrayList<>(11);
-
-        Map<String, Map<String, String>> coveredMethods = new HashMap<>();
+        // List<String> coveredMethods = new ArrayList<>(11);
 
         for (IClassCoverage aClass : classes) {
 
             ClassCoverageImpl classCoverage = (ClassCoverageImpl)aClass;
-            Map<String, String> coveredMethod = classCoverage.getCoveredMethods();
+
+            // 打印计数器信息
+            printCounterInfo(classCoverage);
+
+            Collection<IMethodCoverage> methods = classCoverage.getMethods();       // 该类下的所有方法
+            Map<String, String> coveredMethod = classCoverage.getCoveredMethods();  // 该类下的所有覆盖方法
+
+            System.out.println("----------------------------------------------------------------------------className");
+            System.out.println(classCoverage.getClassName());
+            System.out.println("----------------------------------------------------------------------------coverageMethods");
 
             for (Map.Entry<String, String> entry : coveredMethod.entrySet()) {
 
-                // 方法名
-                String key = entry.getKey();
-                // 类名
-                String value = entry.getValue();
+                String key = entry.getKey();            // 方法名
+                String value = entry.getValue();        // 类名
 
                 if (key != null) {
-                    coveredMethods.put(value, coveredMethod);
-                    methods.add(value + "-" + key);
+                    System.out.println(value + "-" + key);
+                    // coveredMethods.add(value + "-" + key);
                 }
-                System.out.println(entry);
             }
+            System.out.println();
         }
 
-        // 覆盖方法集合
-        System.out.println("================================================");
-        for (Map.Entry<String, Map<String, String>> entry : coveredMethods.entrySet()) {
-            Map<String, String> map = entry.getValue();
-            for (Map.Entry<String, String> mapEntry : map.entrySet()) {
-                System.out.println(mapEntry);
-            }
-        }
+        /* **************************************           输出报告            *****************************************/
 
-        System.out.println("---------------------------------------");
+        System.out.println("=====================================================================");
+        System.out.println();
 
-        for (String method : methods) {
-            System.out.println(method);
-        }
-
-
-        // 设置覆盖率html包的标题名称
+        /*
+         * 设置覆盖率html包的标题名称
+         *
+         * 在该对象初始化过程中会统计记录所有的指针计数器, 即该项目的全量计数器。
+         */
         IBundleCoverage bundleCoverage = coverageBuilder.getBundle("title");
 
-        //
+        // 打印计数器信息
+        printCounterInfo(bundleCoverage);
+
+        // html格式化程序
         HTMLFormatter htmlFormatter = new HTMLFormatter();
 
-        // 将文件直接写入给定的目录
+        // 写入指定目录
         FileMultiReportOutput output = new FileMultiReportOutput(reportDirectory);
         /*
          * 创建一个新的访问者，向给定的输出写报告
@@ -179,5 +150,36 @@ public class CoverageReport {
         // 发出结构信息结束的信号，以允许报表写出所有信息 必须在所有报告数据发出后调用
         visitor.visitEnd();
 
+    }
+
+    /**
+     * 打印计数器信息
+     *
+     * @param node 拥有覆盖率信息的对象节点
+     */
+    private void printCounterInfo(ICoverageNode node) {
+
+        System.out.println("----------------------------------------------------------------------------printCounterInfo");
+
+        ICounter lineCounter = node.getLineCounter();                  // 行
+        ICounter methodCounter = node.getMethodCounter();              // 方法
+        ICounter classCounter = node.getClassCounter();                // 类
+        ICounter branchCounter = node.getBranchCounter();              // 分支
+        ICounter complexityCounter = node.getComplexityCounter();      // 圈
+        ICounter instructionCounter = node.getInstructionCounter();    // 指令
+
+        double lineRatio = lineCounter.getCoveredRatio();
+        double methodRatio = methodCounter.getCoveredRatio();
+        double classRatio = classCounter.getCoveredRatio();
+        double branchRatio = branchCounter.getCoveredRatio();
+        double complexityRatio = complexityCounter.getCoveredRatio();
+        double instructionRatio = instructionCounter.getCoveredRatio();
+
+        System.out.println(lineRatio);
+        System.out.println(methodRatio);
+        System.out.println(classRatio);
+        System.out.println(branchRatio);
+        System.out.println(complexityRatio);
+        System.out.println(instructionRatio);
     }
 }

@@ -7,7 +7,7 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.report.internal;
 
@@ -21,106 +21,109 @@ import org.jacoco.report.IMultiReportOutput;
 /**
  * Logical representation of a folder in the output structure. This utility
  * ensures valid and unique file names and helps to create relative links.
+ *
+ * 输出结构中文件夹的逻辑表示。
+ * 该实用程序确保有效和唯一的文件名，并有助于创建相对链接。
  */
 public class ReportOutputFolder {
 
-	private final IMultiReportOutput output;
+    private final IMultiReportOutput output;
 
-	private final ReportOutputFolder parent;
+    private final ReportOutputFolder parent;
 
-	private final String path;
+    private final String path;
 
-	/** Cached sub-folder instances to guarantee stable normalization */
-	private final Map<String, ReportOutputFolder> subFolders = new HashMap<String, ReportOutputFolder>();
+    /** Cached sub-folder instances to guarantee stable normalization */
+    private final Map<String, ReportOutputFolder> subFolders = new HashMap<String, ReportOutputFolder>();
 
-	private final NormalizedFileNames fileNames;
+    private final NormalizedFileNames fileNames;
 
-	/**
-	 * Creates a new root folder for the given output.
-	 * 
-	 * @param output
-	 *            output for generated files
-	 */
-	public ReportOutputFolder(final IMultiReportOutput output) {
-		this(output, null, "");
-	}
+    /**
+     * Creates a new root folder for the given output.
+     * 为给定输出创建新的根文件夹。
+     *
+     * @param output 生成文件的输出
+     */
+    public ReportOutputFolder(final IMultiReportOutput output) {
+        this(output, null, "");
+    }
 
-	/**
-	 * Creates a new root folder for the given output.
-	 * 
-	 * @param output
-	 *            output for generated files
-	 */
-	private ReportOutputFolder(final IMultiReportOutput output,
-			final ReportOutputFolder parent, final String path) {
-		this.output = output;
-		this.parent = parent;
-		this.path = path;
-		fileNames = new NormalizedFileNames();
-	}
+    /**
+     * Creates a new root folder for the given output.
+     *
+     * @param output
+     *            output for generated files
+     */
+    private ReportOutputFolder(final IMultiReportOutput output,
+                               final ReportOutputFolder parent, final String path) {
+        this.output = output;
+        this.parent = parent;
+        this.path = path;
+        fileNames = new NormalizedFileNames();
+    }
 
-	/**
-	 * Creates a sub-folder with the given name.
-	 * 
-	 * @param name
-	 *            name of the sub-folder
-	 * @return handle for output into the sub-folder
-	 */
-	public ReportOutputFolder subFolder(final String name) {
-		final String normalizedName = normalize(name);
-		ReportOutputFolder folder = subFolders.get(normalizedName);
-		if (folder != null) {
-			return folder;
-		}
-		folder = new ReportOutputFolder(output, this, path + normalizedName
-				+ "/");
-		subFolders.put(normalizedName, folder);
-		return folder;
-	}
+    /**
+     * Creates a sub-folder with the given name.
+     *
+     * @param name
+     *            name of the sub-folder
+     * @return handle for output into the sub-folder
+     */
+    public ReportOutputFolder subFolder(final String name) {
+        final String normalizedName = normalize(name);
+        ReportOutputFolder folder = subFolders.get(normalizedName);
+        if (folder != null) {
+            return folder;
+        }
+        folder = new ReportOutputFolder(output, this, path + normalizedName
+                + "/");
+        subFolders.put(normalizedName, folder);
+        return folder;
+    }
 
-	/**
-	 * Creates a new file in this folder with the given local name.
-	 * 
-	 * @param name
-	 *            name of the sub-folder
-	 * @return handle for output into the sub-folder
-	 * @throws IOException
-	 *             if the file creation fails
-	 */
-	public OutputStream createFile(final String name) throws IOException {
-		return output.createFile(path + normalize(name));
-	}
+    /**
+     * Creates a new file in this folder with the given local name.
+     *
+     * @param name
+     *            name of the sub-folder
+     * @return handle for output into the sub-folder
+     * @throws IOException
+     *             if the file creation fails
+     */
+    public OutputStream createFile(final String name) throws IOException {
+        return output.createFile(path + normalize(name));
+    }
 
-	/**
-	 * Returns a link relative to a given base to a resource within this folder.
-	 * 
-	 * @param base
-	 *            base to create the relative link from
-	 * @param name
-	 *            name of the file or folder in this folder
-	 * @return relative link
-	 * @throws IllegalArgumentException
-	 *             if this folder and the base do not have the same root
-	 */
-	public String getLink(final ReportOutputFolder base, final String name) {
-		if (base.isAncestorOf(this)) {
-			return this.path.substring(base.path.length()) + normalize(name);
-		}
-		if (base.parent == null) {
-			throw new IllegalArgumentException("Folders with different roots.");
-		}
-		return "../" + this.getLink(base.parent, name);
-	}
+    /**
+     * Returns a link relative to a given base to a resource within this folder.
+     *
+     * @param base
+     *            base to create the relative link from
+     * @param name
+     *            name of the file or folder in this folder
+     * @return relative link
+     * @throws IllegalArgumentException
+     *             if this folder and the base do not have the same root
+     */
+    public String getLink(final ReportOutputFolder base, final String name) {
+        if (base.isAncestorOf(this)) {
+            return this.path.substring(base.path.length()) + normalize(name);
+        }
+        if (base.parent == null) {
+            throw new IllegalArgumentException("Folders with different roots.");
+        }
+        return "../" + this.getLink(base.parent, name);
+    }
 
-	private boolean isAncestorOf(final ReportOutputFolder folder) {
-		if (this == folder) {
-			return true;
-		}
-		return folder.parent == null ? false : isAncestorOf(folder.parent);
-	}
+    private boolean isAncestorOf(final ReportOutputFolder folder) {
+        if (this == folder) {
+            return true;
+        }
+        return folder.parent == null ? false : isAncestorOf(folder.parent);
+    }
 
-	private String normalize(final String name) {
-		return fileNames.getFileName(name);
-	}
+    private String normalize(final String name) {
+        return fileNames.getFileName(name);
+    }
 
 }

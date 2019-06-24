@@ -7,7 +7,7 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.report.html;
 
@@ -45,194 +45,197 @@ import org.jacoco.report.internal.html.table.Table;
 
 /**
  * Formatter for coverage reports in multiple HTML pages.
+ * 多个网页中覆盖报告的格式化程序
  */
 public class HTMLFormatter implements IHTMLReportContext {
 
-	private ILanguageNames languageNames = new JavaNames();
+    private ILanguageNames languageNames = new JavaNames();
 
-	private Locale locale = Locale.getDefault();
+    private Locale locale = Locale.getDefault();
 
-	private String footerText = "";
+    private String footerText = "";
 
-	private String outputEncoding = "UTF-8";
+    private String outputEncoding = "UTF-8";
 
-	private Resources resources;
+    private Resources resources;
 
-	private ElementIndex index;
+    private ElementIndex index;
 
-	private SessionsPage sessionsPage;
+    private SessionsPage sessionsPage;
 
-	private Table table;
+    private Table table;
 
-	/**
-	 * New instance with default settings.
-	 */
-	public HTMLFormatter() {
-	}
+    /**
+     * New instance with default settings.
+     */
+    public HTMLFormatter() {
+    }
 
-	/**
-	 * Sets the implementation for language name display. Java language names
-	 * are defined by default.
-	 * 
-	 * @param languageNames
-	 *            converter for language specific names
-	 */
-	public void setLanguageNames(final ILanguageNames languageNames) {
-		this.languageNames = languageNames;
-	}
+    /**
+     * Sets the implementation for language name display. Java language names
+     * are defined by default.
+     * 设置语言名称显示的实现, Java语言名称是默认定义的
+     *
+     * @param languageNames
+     *            converter for language specific names
+     */
+    public void setLanguageNames(final ILanguageNames languageNames) {
+        this.languageNames = languageNames;
+    }
 
-	/**
-	 * Sets the locale used for report rendering. The current default locale is
-	 * used by default.
-	 * 
-	 * @param locale
-	 *            locale used for report rendering
-	 */
-	public void setLocale(final Locale locale) {
-		this.locale = locale;
-	}
+    /**
+     * Sets the locale used for report rendering. The current default locale is
+     * used by default.
+     * 设置用于报表呈现的区域设置。默认情况下使用当前默认区域设置
+     *
+     * @param locale
+     *            locale used for report rendering
+     */
+    public void setLocale(final Locale locale) {
+        this.locale = locale;
+    }
 
-	/**
-	 * Sets the optional text that should be included in every footer page.
-	 * 
-	 * @param footerText
-	 *            footer text
-	 */
-	public void setFooterText(final String footerText) {
-		this.footerText = footerText;
-	}
+    /**
+     * Sets the optional text that should be included in every footer page.
+     *
+     * @param footerText
+     *            footer text
+     */
+    public void setFooterText(final String footerText) {
+        this.footerText = footerText;
+    }
 
-	/**
-	 * Sets the encoding used for generated HTML pages. Default is UTF-8.
-	 * 
-	 * @param outputEncoding
-	 *            HTML output encoding
-	 */
-	public void setOutputEncoding(final String outputEncoding) {
-		this.outputEncoding = outputEncoding;
-	}
+    /**
+     * Sets the encoding used for generated HTML pages. Default is UTF-8.
+     *
+     * @param outputEncoding
+     *            HTML output encoding
+     */
+    public void setOutputEncoding(final String outputEncoding) {
+        this.outputEncoding = outputEncoding;
+    }
 
-	// === IHTMLReportContext ===
+    // === IHTMLReportContext ===
 
-	public ILanguageNames getLanguageNames() {
-		return languageNames;
-	}
+    public ILanguageNames getLanguageNames() {
+        return languageNames;
+    }
 
-	public Resources getResources() {
-		return resources;
-	}
+    public Resources getResources() {
+        return resources;
+    }
 
-	public Table getTable() {
-		if (table == null) {
-			table = createTable();
-		}
-		return table;
-	}
+    public Table getTable() {
+        if (table == null) {
+            table = createTable();
+        }
+        return table;
+    }
 
-	private Table createTable() {
-		final Table t = new Table();
-		t.add("Element", null, new LabelColumn(), false);
-		t.add("Missed Instructions", Styles.BAR, new BarColumn(CounterEntity.INSTRUCTION,
-				locale), true);
-		t.add("Cov.", Styles.CTR2,
-				new PercentageColumn(CounterEntity.INSTRUCTION, locale), false);
-		t.add("Missed Branches", Styles.BAR, new BarColumn(CounterEntity.BRANCH, locale),
-				false);
-		t.add("Cov.", Styles.CTR2, new PercentageColumn(CounterEntity.BRANCH, locale),
-				false);
-		addMissedTotalColumns(t, "Cxty", CounterEntity.COMPLEXITY);
-		addMissedTotalColumns(t, "Lines", CounterEntity.LINE);
-		addMissedTotalColumns(t, "Methods", CounterEntity.METHOD);
-		addMissedTotalColumns(t, "Classes", CounterEntity.CLASS);
-		return t;
-	}
+    private Table createTable() {
+        final Table t = new Table();
+        t.add("Element", null, new LabelColumn(), false);
+        t.add("Missed Instructions", Styles.BAR, new BarColumn(CounterEntity.INSTRUCTION,
+                locale), true);
+        t.add("Cov.", Styles.CTR2,
+                new PercentageColumn(CounterEntity.INSTRUCTION, locale), false);
+        t.add("Missed Branches", Styles.BAR, new BarColumn(CounterEntity.BRANCH, locale),
+                false);
+        t.add("Cov.", Styles.CTR2, new PercentageColumn(CounterEntity.BRANCH, locale),
+                false);
+        addMissedTotalColumns(t, "Cxty", CounterEntity.COMPLEXITY);
+        addMissedTotalColumns(t, "Lines", CounterEntity.LINE);
+        addMissedTotalColumns(t, "Methods", CounterEntity.METHOD);
+        addMissedTotalColumns(t, "Classes", CounterEntity.CLASS);
+        return t;
+    }
 
-	private void addMissedTotalColumns(final Table table, final String label,
-			final CounterEntity entity) {
-		table.add("Missed", Styles.CTR1,
-				CounterColumn.newMissed(entity, locale), false);
-		table.add(label, Styles.CTR2, CounterColumn.newTotal(entity, locale),
-				false);
-	}
+    private void addMissedTotalColumns(final Table table, final String label,
+                                       final CounterEntity entity) {
+        table.add("Missed", Styles.CTR1,
+                CounterColumn.newMissed(entity, locale), false);
+        table.add(label, Styles.CTR2, CounterColumn.newTotal(entity, locale),
+                false);
+    }
 
-	public String getFooterText() {
-		return footerText;
-	}
+    public String getFooterText() {
+        return footerText;
+    }
 
-	public ILinkable getSessionsPage() {
-		return sessionsPage;
-	}
+    public ILinkable getSessionsPage() {
+        return sessionsPage;
+    }
 
-	public String getOutputEncoding() {
-		return outputEncoding;
-	}
+    public String getOutputEncoding() {
+        return outputEncoding;
+    }
 
-	public IIndexUpdate getIndexUpdate() {
-		return index;
-	}
+    public IIndexUpdate getIndexUpdate() {
+        return index;
+    }
 
-	public Locale getLocale() {
-		return locale;
-	}
+    public Locale getLocale() {
+        return locale;
+    }
 
-	/**
-	 * Creates a new visitor to write a report to the given output.
-	 * 
-	 * @param output
-	 *            output to write the report to
-	 * @return visitor to emit the report data to
-	 * @throws IOException
-	 *             in case of problems with the output stream
-	 */
-	public IReportVisitor createVisitor(final IMultiReportOutput output)
-			throws IOException {
-		final ReportOutputFolder root = new ReportOutputFolder(output);
-		resources = new Resources(root);
-		resources.copyResources();
-		index = new ElementIndex(root);
-		return new IReportVisitor() {
+    /**
+     * Creates a new visitor to write a report to the given output.
+     * 创建一个新的访问者，向给定的输出写一个报告。
+     *
+     * @param output 要写入报告的输出
+     *
+     * @return 向其发送报告数据的访问者
+     * @throws IOException 在输出流出现问题的情况下
+     */
+    public IReportVisitor createVisitor(final IMultiReportOutput output) throws IOException {
 
-			private List<SessionInfo> sessionInfos;
-			private Collection<ExecutionData> executionData;
+        final ReportOutputFolder root = new ReportOutputFolder(output);
+        resources = new Resources(root);
+        resources.copyResources();
+        index = new ElementIndex(root);
+        return new IReportVisitor() {
 
-			private HTMLGroupVisitor groupHandler;
+            private List<SessionInfo> sessionInfos;
+            private Collection<ExecutionData> executionData;
 
-			public void visitInfo(final List<SessionInfo> sessionInfos,
-					final Collection<ExecutionData> executionData)
-					throws IOException {
-				this.sessionInfos = sessionInfos;
-				this.executionData = executionData;
-			}
+            private HTMLGroupVisitor groupHandler;
 
-			public void visitBundle(final IBundleCoverage bundle,
-					final ISourceFileLocator locator) throws IOException {
-				final BundlePage page = new BundlePage(bundle, null, locator,
-						root, HTMLFormatter.this);
-				createSessionsPage(page);
-				page.render();
-			}
+            public void visitInfo(final List<SessionInfo> sessionInfos,
+                                  final Collection<ExecutionData> executionData)
+                    throws IOException {
+                this.sessionInfos = sessionInfos;
+                this.executionData = executionData;
+            }
 
-			public IReportGroupVisitor visitGroup(final String name)
-					throws IOException {
-				groupHandler = new HTMLGroupVisitor(null, root,
-						HTMLFormatter.this, name);
-				createSessionsPage(groupHandler.getPage());
-				return groupHandler;
+            public void visitBundle(final IBundleCoverage bundle,
+                                    final ISourceFileLocator locator) throws IOException {
+                final BundlePage page = new BundlePage(bundle, null, locator,
+                        root, HTMLFormatter.this);
+                createSessionsPage(page);
+                page.render();
+            }
 
-			}
+            public IReportGroupVisitor visitGroup(final String name)
+                    throws IOException {
+                groupHandler = new HTMLGroupVisitor(null, root,
+                        HTMLFormatter.this, name);
+                createSessionsPage(groupHandler.getPage());
+                return groupHandler;
 
-			private void createSessionsPage(final ReportPage rootpage) {
-				sessionsPage = new SessionsPage(sessionInfos, executionData,
-						index, rootpage, root, HTMLFormatter.this);
-			}
+            }
 
-			public void visitEnd() throws IOException {
-				if (groupHandler != null) {
-					groupHandler.visitEnd();
-				}
-				sessionsPage.render();
-				output.close();
-			}
-		};
-	}
+            private void createSessionsPage(final ReportPage rootpage) {
+                sessionsPage = new SessionsPage(sessionInfos, executionData,
+                        index, rootpage, root, HTMLFormatter.this);
+            }
+
+            public void visitEnd() throws IOException {
+                if (groupHandler != null) {
+                    groupHandler.visitEnd();
+                }
+                sessionsPage.render();
+                output.close();
+            }
+        };
+    }
 }

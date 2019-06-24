@@ -86,8 +86,7 @@ public class ReportGenerator {
         // Create a concrete report visitor based on some supplied
         // configuration. In this case we use the defaults
         final HTMLFormatter htmlFormatter = new HTMLFormatter();
-        final IReportVisitor visitor = htmlFormatter
-                .createVisitor(new FileMultiReportOutput(reportDirectory));
+        final IReportVisitor visitor = htmlFormatter.createVisitor(new FileMultiReportOutput(reportDirectory));
 
         // Initialize the report with all of the execution and session
         // information. At this point the report doesn't know about the

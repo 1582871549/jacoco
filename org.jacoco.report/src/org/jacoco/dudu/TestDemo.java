@@ -32,13 +32,18 @@ public class TestDemo {
         //
         // System.out.println(str1 + "\n"+ str2);
 
+        for (int i = 0; i < 5 ; i++)
+            if (i < 3)
+                System.out.println("------------");
 
-        Map<String, String> methodNames = Collections.EMPTY_MAP;
+        System.out.println("======");
 
-        if (methodNames == null || methodNames.isEmpty() || methodNames.containsKey("aaa")) {
-            System.out.println("1");
-        } else {
-            System.out.println("2");
-        }
+        // Map<String, String> methodNames = Collections.EMPTY_MAP;
+        //
+        // if (methodNames == null || methodNames.isEmpty() || methodNames.containsKey("aaa")) {
+        //     System.out.println("1");
+        // } else {
+        //     System.out.println("2");
+        // }
     }
 }
