@@ -44,14 +44,14 @@ public class CoverageReport {
         CoverageBuilder coverageBuilder = new CoverageBuilder();
 
         // code diff methods
-        Map<String, String> diffMethod = new HashMap<>(16);
+        Map<String, Map<String, String>> diffMethod = new HashMap<>(16);
 
-        diffMethod.put("configure", null);
-        diffMethod.put("paly", null);
-        diffMethod.put("listUser", null);
+        // diffMethod.put("configure", null);
+        // diffMethod.put("paly", null);
+        // diffMethod.put("listUser", null);
 
         // 初始化覆盖率分析器
-        Analyzer analyzer = new Analyzer(executionDataStore, coverageBuilder, diffMethod);
+        Analyzer analyzer = new Analyzer(executionDataStore, coverageBuilder);
 
         /*
          * 分析该class文件或目录
@@ -80,19 +80,18 @@ public class CoverageReport {
             Collection<IMethodCoverage> methods = classCoverage.getMethods();       // 该类下的所有方法
             Map<String, String> coveredMethod = classCoverage.getCoveredMethods();  // 该类下的所有覆盖方法
 
-            System.out.println("----------------------------------------------------------------------------className");
-            System.out.println(classCoverage.getClassName());
             System.out.println("----------------------------------------------------------------------------coverageMethods");
+
+            // key : 类名, value : 类中的覆盖方法
+            diffMethod.put(classCoverage.getClassName(), coveredMethod);
 
             for (Map.Entry<String, String> entry : coveredMethod.entrySet()) {
 
                 String key = entry.getKey();            // 方法名
-                String value = entry.getValue();        // 类名
+                // String value = entry.getValue();        // 类名 -> 已取消赋值 现在是null
 
-                if (key != null) {
-                    System.out.println(value + "-" + key);
-                    // coveredMethods.add(value + "-" + key);
-                }
+                System.out.println(classCoverage.getClassName() + "    " + key);
+                // coveredMethods.add(value + "-" + key);
             }
             System.out.println();
         }
@@ -100,7 +99,11 @@ public class CoverageReport {
         /* **************************************           输出报告            *****************************************/
 
         System.out.println("=====================================================================");
-        System.out.println();
+        System.out.println("=====================================================================");
+
+        Analyzer analyzer1 = new Analyzer(executionDataStore, coverageBuilder, diffMethod);
+
+        analyzer1.analyzeAll(classesDirectory);
 
         /*
          * 设置覆盖率html包的标题名称
@@ -111,6 +114,14 @@ public class CoverageReport {
 
         // 打印计数器信息
         printCounterInfo(bundleCoverage);
+
+        System.out.println("---------------------------------------");
+        for (Map.Entry<String, Map<String, String>> entry : diffMethod.entrySet()) {
+            for (String methodName : entry.getValue().keySet()) {
+                System.out.println(entry.getKey() + "   " + methodName);
+            }
+        }
+
 
         // html格式化程序
         HTMLFormatter htmlFormatter = new HTMLFormatter();

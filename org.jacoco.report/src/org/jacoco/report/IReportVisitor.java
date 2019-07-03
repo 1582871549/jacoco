@@ -7,7 +7,7 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.report;
 
@@ -22,31 +22,28 @@ import org.jacoco.core.data.SessionInfo;
  * Interface for all implementations to retrieve structured report data. Unlike
  * nested {@link IReportGroupVisitor} instances the root visitor accepts exactly one
  * bundle or group.
+ *
+ * 所有实现的接口，用于检索结构化报告数据。
+ * 与嵌套的{@link IReportGroupVisitor}实例不同，根访问者只接受一个包或组。
  */
 public interface IReportVisitor extends IReportGroupVisitor {
 
-	/**
-	 * Initializes the report with global information. This method has to be
-	 * called before any other method can be called.
-	 * 
-	 * @param sessionInfos
-	 *            list of chronological ordered {@link SessionInfo} objects
-	 *            where execution data has been collected for this report.
-	 * @param executionData
-	 *            collection of all {@link ExecutionData} objects that are
-	 *            considered for this report
-	 * @throws IOException
-	 *             in case of IO problems with the report writer
-	 */
-	void visitInfo(List<SessionInfo> sessionInfos,
-			Collection<ExecutionData> executionData) throws IOException;
+    /**
+     * 用全局信息初始化报告。
+     * 在调用任何其他方法之前，必须先调用此方法。
+     *
+     * @param sessionInfos 为该报表收集执行数据的按时间顺序排列的{@link SessionInfo}对象列表。
+     * @param executionData 此报告考虑的所有{@link ExecutionData}对象的集合
+     * @throws IOException in case of IO problems with the report writer
+     */
+    void visitInfo(List<SessionInfo> sessionInfos,
+                   Collection<ExecutionData> executionData) throws IOException;
 
-	/**
-	 * Has to be called after all report data has been emitted.
-	 * 
-	 * @throws IOException
-	 *             in case of IO problems with the report writer
-	 */
-	void visitEnd() throws IOException;
+    /**
+     * 必须在所有报告数据发出后调用。
+     *
+     * @throws IOException in case of IO problems with the report writer
+     */
+    void visitEnd() throws IOException;
 
 }

@@ -7,7 +7,7 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.report;
 
@@ -20,62 +20,57 @@ import java.io.Reader;
  * Abstract base class for {@link ISourceFileLocator} locator implementations
  * based on {@link InputStream}s. It handles the encoding and tab width.
  */
-public abstract class InputStreamSourceFileLocator implements
-		ISourceFileLocator {
+public abstract class InputStreamSourceFileLocator implements ISourceFileLocator {
 
-	private final String encoding;
-	private final int tabWidth;
+    private final String encoding;
+    private final int tabWidth;
 
-	/**
-	 * Creates a new locator with the given specification.
-	 * 
-	 * @param encoding
-	 *            encoding of the source files, <code>null</code> for platform
-	 *            default encoding
-	 * @param tabWidth
-	 *            tab width in source files as number of blanks
-	 * 
-	 */
-	protected InputStreamSourceFileLocator(final String encoding,
-			final int tabWidth) {
-		this.encoding = encoding;
-		this.tabWidth = tabWidth;
-	}
+    /**
+     * 使用给定的规范创建新定位器。
+     *
+     * @param encoding 源文件的编码，平台默认编码为 <code>null</code>
+     * @param tabWidth 源文件中以空格数表示的制表符宽度
+     */
+    protected InputStreamSourceFileLocator(final String encoding,
+                                           final int tabWidth) {
+        this.encoding = encoding;
+        this.tabWidth = tabWidth;
+    }
 
-	public Reader getSourceFile(final String packageName, final String fileName)
-			throws IOException {
-		final InputStream in;
-		if (packageName.length() > 0) {
-			in = getSourceStream(packageName + "/" + fileName);
-		} else {
-			in = getSourceStream(fileName);
-		}
+    public Reader getSourceFile(final String packageName, final String fileName)
+            throws IOException {
+        final InputStream in;
+        if (packageName.length() > 0) {
+            in = getSourceStream(packageName + "/" + fileName);
+        } else {
+            in = getSourceStream(fileName);
+        }
 
-		if (in == null) {
-			return null;
-		}
+        if (in == null) {
+            return null;
+        }
 
-		if (encoding == null) {
-			return new InputStreamReader(in);
-		} else {
-			return new InputStreamReader(in, encoding);
-		}
-	}
+        if (encoding == null) {
+            return new InputStreamReader(in);
+        } else {
+            return new InputStreamReader(in, encoding);
+        }
+    }
 
-	public int getTabWidth() {
-		return tabWidth;
-	}
+    public int getTabWidth() {
+        return tabWidth;
+    }
 
-	/**
-	 * Tries to locate the given source file and opens its binary content.
-	 * 
-	 * @param path
-	 *            local path to the resource
-	 * @return stream if the file could be located, <code>null</code> otherwise
-	 * @throws IOException
-	 *             in case of problems while opening the stream
-	 */
-	protected abstract InputStream getSourceStream(String path)
-			throws IOException;
+    /**
+     * Tries to locate the given source file and opens its binary content.
+     *
+     * @param path
+     *            local path to the resource
+     * @return stream if the file could be located, <code>null</code> otherwise
+     * @throws IOException
+     *             in case of problems while opening the stream
+     */
+    protected abstract InputStream getSourceStream(String path)
+            throws IOException;
 
 }

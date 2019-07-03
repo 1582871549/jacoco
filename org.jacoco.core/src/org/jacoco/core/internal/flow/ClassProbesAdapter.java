@@ -34,9 +34,9 @@ public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerato
 
     private int counter = 0;
 
-    private String name;
+    private String className;
 
-    private final Map<String, String> diffMethod;
+    private Map<String, Map<String, String>> diffMethod;
 
     /**
      * 创建委托给给定访问者的新适配器。
@@ -48,7 +48,6 @@ public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerato
         super(InstrSupport.ASM_API_VERSION, cv);
         this.cv = cv;
         this.trackFrames = trackFrames;
-        this.diffMethod = null;
     }
 
     /**
@@ -59,7 +58,7 @@ public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerato
      */
     public ClassProbesAdapter(final ClassProbesVisitor cv,
                               final boolean trackFrames,
-                              final Map<String, String> diffMethod) {
+                              final Map<String, Map<String, String>> diffMethod) {
         super(InstrSupport.ASM_API_VERSION, cv);
         this.cv = cv;
         this.trackFrames = trackFrames;
@@ -69,13 +68,13 @@ public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerato
     /**
      * @param version       版本
      * @param access        访问
-     * @param name          名字
+     * @param className     名字
      * @param signature     签名
      * @param superName     超级名
      * @param interfaces    接口
      */
     @Override
-    public void visit(final int version, final int access, final String name,
+    public void visit(final int version, final int access, final String className,
                       final String signature, final String superName,
                       final String[] interfaces) {
 
@@ -95,22 +94,22 @@ public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerato
         // superName    java/lang/Object
         // interfaces   [com/dudu/common/configuration/example/SchoolService]
 
-        this.name = name;
-        super.visit(version, access, name, signature, superName, interfaces);
+        this.className = className;
+        super.visit(version, access, className, signature, superName, interfaces);
     }
 
     /**
      * 此方法每次调用时都必须返回一个新的{@link MethodVisitor}实例(或{null})，即不应该返回以前返回的实例
      *
      * @param access 方法的访问标志， 此参数指示该方法是合成的和 / 或是不推荐使用的
-     * @param name 方法的名称
+     * @param methodName 方法的名称
      * @param desc 方法的描述符
      * @param signature 方法的签名。如果方法参数、返回类型和异常不使用泛型类型，则可能为null。
      * @param exceptions 方法异常类的内部名称 。可能为空
      * @return 访问方法字节代码的对象，如果该类访问者对访问该方法的代码没有关系，则为null。
      */
     @Override
-    public final MethodVisitor visitMethod(final int access, final String name,
+    public final MethodVisitor visitMethod(final int access, final String methodName,
                                            final String desc, final String signature, final String[] exceptions) {
 
         // System.out.println("----------5.5--------" + "ClassProbesAdapter # visitMethod");
@@ -126,13 +125,15 @@ public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerato
          * 当访问一个方法时，我们需要一个{@link MethodProbesVisitor}来处理该方法的探测。
          * cv == ClassAnalyzer, mv = MethodAnalyzer的匿名内部子类
          */
-        final MethodProbesVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
+        final MethodProbesVisitor mv = cv.visitMethod(access, methodName, desc, signature, exceptions);
 
         // System.out.println(name);
         // System.out.println("----------------");
 
-        // if (mv != null && (diffMethod == null || diffMethod.isEmpty() || diffMethod.containsKey(name))) {
-        if (mv != null) {
+        if (mv != null && (diffMethod == null || diffMethod.size() == 0 || diffMethod.get(this.className).containsKey(methodName))) {
+        // if (mv != null) {
+
+            System.out.println("++     " + methodName + "      " + this.className);
             methodProbes = mv;
         } else {
             // 在任何情况下，我们都需要访问该方法，否则探针id是不可复制的
@@ -140,7 +141,7 @@ public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerato
         }
 
         // 方法消除器
-        return new MethodSanitizer(null, access, name, desc, signature, exceptions) {
+        return new MethodSanitizer(null, access, methodName, desc, signature, exceptions) {
 
             @Override
             public void visitEnd() {
@@ -156,7 +157,7 @@ public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerato
 
                 if (trackFrames) {
 
-                    final AnalyzerAdapter analyzer = new AnalyzerAdapter(ClassProbesAdapter.this.name, access, name, desc, probesAdapter);
+                    final AnalyzerAdapter analyzer = new AnalyzerAdapter(ClassProbesAdapter.this.className, access, name, desc, probesAdapter);
 
                     probesAdapter.setAnalyzer(analyzer);
 
@@ -188,7 +189,7 @@ public class ClassProbesAdapter extends ClassVisitor implements IProbeIdGenerato
     public String toString() {
         return "ClassProbesAdapter{" +
                 "cv=" + cv +
-                ", name='" + name + '\'' +
+                ", className='" + className + '\'' +
                 "} ";
     }
 }

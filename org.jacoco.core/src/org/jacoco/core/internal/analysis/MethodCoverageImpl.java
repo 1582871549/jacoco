@@ -15,7 +15,6 @@ import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.IMethodCoverage;
 
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Implementation of {@link IMethodCoverage}.单一方法的覆盖数据。此节点的名称是本地方法名称。
@@ -28,11 +27,22 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
 
     private final String methodName;
 
-    private final boolean flag;
+    /**
+     * @auther dujianwei
+     *
+     * 是否记录覆盖方法, <code>true</code>
+     * 记录覆盖方法到 {@link ClassCoverageImpl} 的 coveredMethods 属性中
+     */
+    private boolean flag;
 
-    private final Map<String, String> coveredMethods;
+    /**
+     * @auther dujianwei
+     *
+     * 引用 {@link ClassCoverageImpl} 的 coveredMethods 属性地址到本类
+     * 便于操作覆盖方法
+     */
+    private Map<String, String> coveredMethods;
 
-    private final String className;
     /**
      * 使用给定参数创建方法覆盖数据对象。
      *
@@ -45,10 +55,6 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
         this.methodName = name;
         this.desc = desc;
         this.signature = signature;
-
-        this.flag = false;
-        this.coveredMethods = null;
-        this.className = null;
     }
 
     /**
@@ -66,7 +72,6 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
 
         this.flag = true;
         this.coveredMethods = coverage.getCoveredMethods();
-        this.className = coverage.getClassName();
     }
 
     @Override
@@ -94,16 +99,14 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
         // System.out.println(this.methodCounter);
         // System.out.println(this.classCounter);
         // System.out.println("=========================================");
-        /**
-         * 指令计数器为0时 说明该方法未被覆盖
-         * <p>
-         *     因为每个方法中的每一行代码都对应着一个探针元素
-         *     所以当单个方法中的指令计数等于0时, 说明该方法未被执行, 即未被覆盖
-         * </p>
-         *
+        /*
          * 将指令计数器运算转换为方法计数器
+         * 指令计数器为0时 说明该方法未被覆盖
+         *
+         * 1、因为每个方法中的每一行代码都对应着一个探针元素
+         * 2、所以当单个方法中的指令计数等于0时, 说明该方法未被执行, 即未被覆盖
          */
-        ICounter base = null;
+        ICounter base;
 
         if (this.instructionCounter.getCoveredCount() == 0) {
             base = CounterImpl.COUNTER_1_0;
@@ -111,17 +114,15 @@ public class MethodCoverageImpl extends SourceNodeImpl implements IMethodCoverag
             base = CounterImpl.COUNTER_0_1;
 
             // 通过flag来判断是否记录覆盖方法
-            if (flag) {
+            if (flag && coveredMethods != null) {
 
                 // init = 构造函数, clinit = 静态方法块
-                if (!"<init>".equals(methodName) && !"<clinit>".equals(methodName)) {
+                // if (!"<init>".equals(methodName) && !"<clinit>".equals(methodName)) {
                     // System.out.println(methodName);
-                    // System.out.println(className);
-                    coveredMethods.put(methodName, className);
-                }
-
-
-
+                    // System.out.println(coverage.getClassName());
+                    // coveredMethods.put(methodName, null);
+                // }
+                coveredMethods.put(methodName, null);
             }
         }
         // System.out.println(base);

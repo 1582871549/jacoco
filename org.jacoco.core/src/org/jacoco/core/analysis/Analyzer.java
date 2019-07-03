@@ -50,7 +50,7 @@ public class Analyzer {
 
     private final StringPool stringPool;
 
-    private final Map<String, String> diffMethod;
+    private Map<String, Map<String, String>> diffMethod;
 
 
     /**
@@ -64,7 +64,6 @@ public class Analyzer {
         this.executionData = executionData;
         this.coverageVisitor = coverageVisitor;
         this.stringPool = new StringPool();
-        this.diffMethod = null;
     }
 
     /**
@@ -76,7 +75,7 @@ public class Analyzer {
      */
     public Analyzer(final ExecutionDataStore executionData,
                     final ICoverageVisitor coverageVisitor,
-                    final Map<String, String> diffMethod) {
+                    final Map<String, Map<String, String>> diffMethod) {
         this.executionData = executionData;
         this.coverageVisitor = coverageVisitor;
         this.stringPool = new StringPool();

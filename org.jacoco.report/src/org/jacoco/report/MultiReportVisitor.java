@@ -7,7 +7,7 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.report;
 
@@ -23,59 +23,61 @@ import org.jacoco.core.data.SessionInfo;
 /**
  * A report visitor that is composed from multiple other visitors. This can be
  * used to create more than one report format in one run.
+ *
+ * 由多个其他访问者组成的报告访问者。
+ * 这可用于在一次运行中创建多个报告格式。
  */
 public class MultiReportVisitor extends MultiGroupVisitor implements
-		IReportVisitor {
+        IReportVisitor {
 
-	private final List<IReportVisitor> visitors;
+    private final List<IReportVisitor> visitors;
 
-	/**
-	 * New visitor delegating to all given visitors.
-	 * 
-	 * @param visitors
-	 *            visitors to delegate to
-	 */
-	public MultiReportVisitor(final List<IReportVisitor> visitors) {
-		super(visitors);
-		this.visitors = visitors;
-	}
+    /**
+     * 新访客委派给所有给定访客。
+     *
+     * @param visitors 要委派给的访问者
+     */
+    public MultiReportVisitor(final List<IReportVisitor> visitors) {
+        super(visitors);
+        this.visitors = visitors;
+    }
 
-	public void visitInfo(final List<SessionInfo> sessionInfos,
-			final Collection<ExecutionData> executionData) throws IOException {
-		for (final IReportVisitor v : visitors) {
-			v.visitInfo(sessionInfos, executionData);
-		}
-	}
+    public void visitInfo(final List<SessionInfo> sessionInfos,
+                          final Collection<ExecutionData> executionData) throws IOException {
+        for (final IReportVisitor v : visitors) {
+            v.visitInfo(sessionInfos, executionData);
+        }
+    }
 
-	public void visitEnd() throws IOException {
-		for (final IReportVisitor v : visitors) {
-			v.visitEnd();
-		}
-	}
+    public void visitEnd() throws IOException {
+        for (final IReportVisitor v : visitors) {
+            v.visitEnd();
+        }
+    }
 
 }
 
 class MultiGroupVisitor implements IReportGroupVisitor {
 
-	private final List<? extends IReportGroupVisitor> visitors;
+    private final List<? extends IReportGroupVisitor> visitors;
 
-	MultiGroupVisitor(final List<? extends IReportGroupVisitor> visitors) {
-		this.visitors = visitors;
-	}
+    MultiGroupVisitor(final List<? extends IReportGroupVisitor> visitors) {
+        this.visitors = visitors;
+    }
 
-	public void visitBundle(final IBundleCoverage bundle,
-			final ISourceFileLocator locator) throws IOException {
-		for (final IReportGroupVisitor v : visitors) {
-			v.visitBundle(bundle, locator);
-		}
-	}
+    public void visitBundle(final IBundleCoverage bundle,
+                            final ISourceFileLocator locator) throws IOException {
+        for (final IReportGroupVisitor v : visitors) {
+            v.visitBundle(bundle, locator);
+        }
+    }
 
-	public IReportGroupVisitor visitGroup(final String name) throws IOException {
-		final List<IReportGroupVisitor> children = new ArrayList<IReportGroupVisitor>();
-		for (final IReportGroupVisitor v : visitors) {
-			children.add(v.visitGroup(name));
-		}
-		return new MultiGroupVisitor(children);
-	}
+    public IReportGroupVisitor visitGroup(final String name) throws IOException {
+        final List<IReportGroupVisitor> children = new ArrayList<IReportGroupVisitor>();
+        for (final IReportGroupVisitor v : visitors) {
+            children.add(v.visitGroup(name));
+        }
+        return new MultiGroupVisitor(children);
+    }
 
 }

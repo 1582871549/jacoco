@@ -20,10 +20,6 @@ package org.jacoco.dudu;
 public class JacocoReport {
 
     /**
-     * 关联用户
-     */
-    private String userId;
-    /**
      * exec文件路径  与 this.executionDataFile 内容一致 repo存放, executionDataFile拿取
      */
     private String repo;
@@ -48,10 +44,6 @@ public class JacocoReport {
      */
     private String reportDirectory;
     /**
-     * diffReport 代码差异报告导出目录
-     */
-    private String diffReportDirectory;
-    /**
      * java 文件目录
      */
     private String sourceDirectory;
@@ -63,18 +55,6 @@ public class JacocoReport {
      * html 报告标题
      */
     private String title;
-    /**
-     * diff 代码比对标识
-     */
-    private boolean diff;
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
 
     public String getRepo() {
         return repo;
@@ -124,14 +104,6 @@ public class JacocoReport {
         this.reportDirectory = reportDirectory;
     }
 
-    public String getDiffReportDirectory() {
-        return diffReportDirectory;
-    }
-
-    public void setDiffReportDirectory(String diffReportDirectory) {
-        this.diffReportDirectory = diffReportDirectory;
-    }
-
     public String getSourceDirectory() {
         return sourceDirectory;
     }
@@ -154,13 +126,5 @@ public class JacocoReport {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public boolean isDiff() {
-        return diff;
-    }
-
-    public void setDiff(boolean diff) {
-        this.diff = diff;
     }
 }

@@ -7,7 +7,7 @@
  *
  * Contributors:
  *    Marc R. Hoffmann - initial API and implementation
- *    
+ *
  *******************************************************************************/
 package org.jacoco.report;
 
@@ -19,38 +19,35 @@ import java.io.InputStream;
 /**
  * Locator for source files that picks source files from a given directory in
  * the file system.
+ *
+ * 源文件定位器，从文件系统中的给定目录中选择源文件。
  */
 public class DirectorySourceFileLocator extends InputStreamSourceFileLocator {
 
-	private final File directory;
+    private final File directory;
 
-	/**
-	 * Creates a new locator that searches for source files in the given
-	 * directory.
-	 * 
-	 * @param directory
-	 *            directory to search for source file
-	 * @param encoding
-	 *            encoding of the source files, <code>null</code> for platform
-	 *            default encoding
-	 * @param tabWidth
-	 *            tab width in source files as number of blanks
-	 * 
-	 */
-	public DirectorySourceFileLocator(final File directory,
-			final String encoding, final int tabWidth) {
-		super(encoding, tabWidth);
-		this.directory = directory;
-	}
+    /**
+     * Creates a new locator that searches for source files in the given directory.
+     * 创建在给定目录中搜索源文件的新定位器。
+     *
+     * @param directory 搜索源文件的目录
+     * @param encoding 源文件的编码，平台默认编码为 <code>null</code>
+     * @param tabWidth 源文件中以空格数表示的制表符宽度
+     */
+    public DirectorySourceFileLocator(final File directory,
+                                      final String encoding, final int tabWidth) {
+        super(encoding, tabWidth);
+        this.directory = directory;
+    }
 
-	@Override
-	protected InputStream getSourceStream(final String path) throws IOException {
-		final File file = new File(directory, path);
-		if (file.exists()) {
-			return new FileInputStream(file);
-		} else {
-			return null;
-		}
-	}
+    @Override
+    protected InputStream getSourceStream(final String path) throws IOException {
+        final File file = new File(directory, path);
+        if (file.exists()) {
+            return new FileInputStream(file);
+        } else {
+            return null;
+        }
+    }
 
 }
